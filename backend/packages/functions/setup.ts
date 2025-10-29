@@ -1,6 +1,8 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { Client } from "pg";
 
+// Just easier to have this function than publicly expose the RDS inst
+
 export const runSchema: APIGatewayProxyHandlerV2 = async () => {
   const client = new Client({
     host: process.env.DB_HOST,

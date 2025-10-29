@@ -9,25 +9,36 @@ export interface AuthenticatedUser {
   type: "applicant" | "company" | "admin";
 }
 
-export function verifyToken(event: APIGatewayProxyEventV2): AuthenticatedUser {
-  const authHeader = event.headers.authorization || event.headers.Authorization;
+export const UNAUTHORIZED = { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
+
+/// returns [user, had error]
+export function verifyToken(event: APIGatewayProxyEventV2): 
+  [AuthenticatedUser | null, boolean] {
   
+  const authHeader = event.headers.authorization || event.headers.Authorization;
   if (!authHeader) {
-    throw new Error("No authorization header");
+    return [null, true];
   }
 
   const token = authHeader.replace("Bearer ", "");
-  
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
-    return decoded;
+    return [decoded, false];
   } catch (error) {
-    throw new Error("Invalid token");
+    return [null, true];
   }
 }
 
-export function requireRole(user: AuthenticatedUser, allowedRoles: string[]) {
-  if (!allowedRoles.includes(user.type)) {
-    throw new Error("Forbidden");
+export function verifyTokenAndRole(event: APIGatewayProxyEventV2, roles: string[]):
+  [AuthenticatedUser | null, boolean] {
+  const [user, error] = verifyToken(event);
+  if (error || !hasRole(user!, roles)) {
+    return [null, true]
   }
+
+  return [user, false];
+}
+
+export function hasRole(user: AuthenticatedUser, roles: string[]): boolean {
+  return roles.includes(user.type);
 }

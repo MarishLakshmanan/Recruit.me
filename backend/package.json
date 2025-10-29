@@ -1,0 +1,23 @@
+{
+  "name": "recuit-me-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "sst dev --stage liams",
+    "deploy": "sst deploy --stage liams",
+    "remove": "sst remove --stage liams"
+  },
+  "author": "Liam snow",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.157",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "sst": "^3.9.28"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.15.6",
+    "typescript": "^5.9.3"
+  }
+}

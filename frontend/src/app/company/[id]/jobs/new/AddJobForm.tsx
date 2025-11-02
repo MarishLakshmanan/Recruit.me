@@ -2,45 +2,60 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createJob } from "../../actions";
 import Link from "next/link";
+// If your file is in app/company/[id]/jobs/new/, this is the correct path:
+import { createJob } from "../../actions";
 
-export default function AddJobForm({ companyId }: { companyId: string }) {
+type Props = { companyId: string };
+
+export default function AddJobForm({ companyId }: Props) {
   const [title, setTitle] = useState("");
-  const [salary, setSalary] = useState("");
-  const [description, setDescription] = useState("");
   const [draftSkill, setDraftSkill] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
+  const [salary, setSalary] = useState("");
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const addSkill = () => {
-    const v = draftSkill.trim();
+  const addSkill = (raw?: string) => {
+    const v = (raw ?? draftSkill).trim();
     if (!v) return;
-    if (!skills.some((s) => s.toLowerCase() === v.toLowerCase())) {
-      setSkills([...skills, v]);
-    }
+    // case-insensitive de-dupe
+    const exists = skills.some((s) => s.toLowerCase() === v.toLowerCase());
+    if (!exists) setSkills((prev) => [...prev, v]);
     setDraftSkill("");
   };
-  const removeSkill = (s: string) => setSkills(skills.filter((x) => x !== s));
 
-  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+  const removeSkill = (s: string) =>
+    setSkills((prev) => prev.filter((x) => x !== s));
+
+  const onSkillsKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addSkill();
     }
+    // nice UX: backspace with empty input removes last chip
+    if (e.key === "Backspace" && !draftSkill && skills.length) {
+      setSkills((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const onSkillsBlur = () => {
+    // optional: add the text if they click away
+    if (draftSkill.trim()) addSkill();
   };
 
   const onSubmit = async (formData: FormData) => {
-    formData.set("title", title);
-    formData.set("salary", salary);
-    formData.set("description", description);
+    formData.set("title", title.trim());
+    formData.set("salary", salary.trim());
+    formData.set("description", description.trim());
     formData.set("skills", JSON.stringify(skills));
-    setError(null);
 
+    setError(null);
     startTransition(async () => {
       try {
         await createJob(companyId, formData);
+        // navigate back to the company page after save
         window.location.href = `/company/${companyId}`;
       } catch (e: any) {
         setError(e?.message ?? "Failed to create job");
@@ -49,27 +64,31 @@ export default function AddJobForm({ companyId }: { companyId: string }) {
   };
 
   return (
-    <form action={onSubmit} className="space-y-4 rounded-xl bg-white p-6 shadow">
-      <div>
-        <label className="mb-1 block text-sm font-medium">Job Title</label>
+    <form action={onSubmit} className="space-y-5 rounded-xl bg-white p-6 shadow">
+      {/* Job title */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Job title</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
           placeholder="e.g., Frontend Engineer"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
         />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Skills</label>
+      {/* Skills (input + chips directly below) */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Skills</label>
         <input
+          id="skills"
           value={draftSkill}
           onChange={(e) => setDraftSkill(e.target.value)}
-          onKeyDown={onKeyDown}
+          onKeyDown={onSkillsKeyDown}
+          onBlur={onSkillsBlur}
+          placeholder="Type a skill and press Enter…"
           className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
-          placeholder="Type a skill and press Enter"
         />
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {skills.map((s) => (
             <span
               key={s}
@@ -79,36 +98,42 @@ export default function AddJobForm({ companyId }: { companyId: string }) {
               <button
                 type="button"
                 onClick={() => removeSkill(s)}
-                className="rounded-full border border-indigo-200 bg-white px-2 leading-none"
+                className="rounded-full border border-indigo-200 bg-white px-2 leading-none hover:bg-red-50"
                 aria-label={`Remove ${s}`}
+                title="Remove"
               >
                 ×
               </button>
             </span>
           ))}
+          {!skills.length && (
+            <span className="text-sm text-gray-500">No skills added yet.</span>
+          )}
         </div>
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Salary</label>
+      {/* Salary */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Salary</label>
         <input
           type="number"
           min="0"
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
           placeholder="e.g., 120000"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
         />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Job Description</label>
+      {/* Job Description */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Job Description</label>
         <textarea
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
           placeholder="Brief summary of responsibilities, requirements, etc."
+          className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
         />
       </div>
 

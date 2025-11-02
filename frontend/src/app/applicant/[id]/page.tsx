@@ -8,7 +8,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   const applicant = {
     id: applicantId,
     name: "Applicant Name",
-    skills: ["React", "TypeScript"], // server snapshot; will be replaced by local after mount
+    skills: [], 
   };
 
   return (
@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           initialSkills={applicant.skills}
         >
           <ApplicantHeader applicantId={applicant.id} />
-          {/* You can render skills list here if you want */}
+          {}
         </ApplicantStateProvider>
       </div>
     </main>

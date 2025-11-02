@@ -22,13 +22,11 @@ export function ApplicantStateProvider({
   initialSkills: string[];
   children: React.ReactNode;
 }) {
-  const storageKey = `applicant:${applicantId}`;
+  const storageKey = `applicant:v2:${applicantId}`;
 
-  // ✅ Render the server snapshot first (prevents hydration mismatch)
   const [name, setName] = useState(initialName);
   const [skills, setSkills] = useState<string[]>(initialSkills);
 
-  // After mount, hydrate from localStorage if present
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(storageKey);
@@ -40,10 +38,9 @@ export function ApplicantStateProvider({
         }
       }
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [storageKey]);
 
-  // Keep storage in sync
   useEffect(() => {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify({ name, skills }));

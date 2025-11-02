@@ -63,7 +63,7 @@ export default function EditApplicantSkills({ applicantId }: { applicantId: stri
         await updateApplicantSkills(applicantId, fd);
         close();
       } catch (e: any) {
-        setSkills(prev); // rollback
+        setSkills(prev); 
         setError(e?.message ?? "Failed to save skills");
       }
     });
@@ -102,28 +102,30 @@ export default function EditApplicantSkills({ applicantId }: { applicantId: stri
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
-            className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
+            className="mb-3 w-full rounded-md border border-blue-300 bg-blue-50/40 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
           />
 
           {/* Chips */}
-          <div className="flex flex-wrap gap-2">
-            {draftSkills.map((s) => (
-              <span
-                key={s}
-                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm"
-              >
-                {s}
-                <button
-                  type="button"
-                  onClick={() => removeSkill(s)}
-                  className="rounded-full border px-1.5 leading-none"
-                  aria-label={`Remove ${s}`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
+          <div className="flex flex-wrap gap-3">
+  {draftSkills.map((s) => (
+    <span
+      key={s}
+      className="group inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm text-blue-800 shadow-sm"
+    >
+      <span className="font-medium">{s}</span>
+      <button
+        type="button"
+        onClick={() => removeSkill(s)}
+        aria-label={`Remove ${s}`}
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-700 transition
+                   hover:bg-blue-200 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        ×
+      </button>
+    </span>
+  ))}
+</div>
+
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

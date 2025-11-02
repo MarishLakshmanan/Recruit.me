@@ -13,7 +13,7 @@ export default async function Page({ params }: { params: { id: string } }) {
       <div className="mx-auto max-w-5xl">
         <CompanyStateProvider companyId={company.id} initialName={company.name}>
           <CompanyHeader companyId={company.id} />
-          {/* Keep your tabs, stats, jobs list, etc. here */}
+          {}
         </CompanyStateProvider>
       </div>
     </main>

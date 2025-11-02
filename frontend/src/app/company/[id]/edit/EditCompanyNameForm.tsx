@@ -19,7 +19,6 @@ export default function EditCompanyNameForm({
     startTransition(async () => {
       try {
         await updateCompanyName(companyId, formData);
-        // navigate back to company page
         window.location.href = `/company/${companyId}`;
       } catch (e: any) {
         setError(e?.message ?? "Failed to save");

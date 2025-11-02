@@ -20,7 +20,6 @@ export function CompanyStateProvider({
 }) {
   const storageKey = `company:${companyId}:name`;
   const [name, setName] = useState<string>(() => {
-    // load from localStorage if present (so refresh shows the edited value)
     if (typeof window !== "undefined") {
       const saved = window.localStorage.getItem(storageKey);
       if (saved) return saved;
@@ -29,17 +28,15 @@ export function CompanyStateProvider({
   });
 
   useEffect(() => {
-    // keep storage in sync for this tab
     try {
       window.localStorage.setItem(storageKey, name);
     } catch {}
   }, [name, storageKey]);
 
-  // If the server changed (e.g., on first render or after real API), accept it unless user has edited.
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
     if (!saved) setName(initialName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [initialName]);
 
   const value = useMemo(() => ({ name, setName }), [name]);

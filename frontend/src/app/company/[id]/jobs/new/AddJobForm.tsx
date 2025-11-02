@@ -3,7 +3,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-// If your file is in app/company/[id]/jobs/new/, this is the correct path:
 import { createJob } from "../../actions";
 
 type Props = { companyId: string };
@@ -20,7 +19,6 @@ export default function AddJobForm({ companyId }: Props) {
   const addSkill = (raw?: string) => {
     const v = (raw ?? draftSkill).trim();
     if (!v) return;
-    // case-insensitive de-dupe
     const exists = skills.some((s) => s.toLowerCase() === v.toLowerCase());
     if (!exists) setSkills((prev) => [...prev, v]);
     setDraftSkill("");
@@ -34,14 +32,12 @@ export default function AddJobForm({ companyId }: Props) {
       e.preventDefault();
       addSkill();
     }
-    // nice UX: backspace with empty input removes last chip
     if (e.key === "Backspace" && !draftSkill && skills.length) {
       setSkills((prev) => prev.slice(0, -1));
     }
   };
 
   const onSkillsBlur = () => {
-    // optional: add the text if they click away
     if (draftSkill.trim()) addSkill();
   };
 
@@ -55,7 +51,6 @@ export default function AddJobForm({ companyId }: Props) {
     startTransition(async () => {
       try {
         await createJob(companyId, formData);
-        // navigate back to the company page after save
         window.location.href = `/company/${companyId}`;
       } catch (e: any) {
         setError(e?.message ?? "Failed to create job");
@@ -76,7 +71,7 @@ export default function AddJobForm({ companyId }: Props) {
         />
       </div>
 
-      {/* Skills (input + chips directly below) */}
+      {/* Skills  */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Skills</label>
         <input

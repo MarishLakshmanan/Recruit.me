@@ -3,7 +3,6 @@ import EditCompanyNameForm from "./EditCompanyNameForm";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const companyId = params.id;
-  // TODO: replace with real fetch
   const company = { id: companyId, name: "Company Name" };
 
   return (

@@ -1,28 +1,27 @@
-import EditApplicantSkills from "./EditApplicantSkills";
+import { ApplicantStateProvider } from "./applicant-state";
+import ApplicantHeader from "./ApplicantHeader";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const applicantId = params.id;
 
-  // TODO: replace with your real fetch (DB / API)
+  // TODO: replace with real fetch
   const applicant = {
     id: applicantId,
     name: "Applicant Name",
-    skills: ["React", "TypeScript", "Tailwind"],
+    skills: ["React", "TypeScript"], // server snapshot; will be replaced by local after mount
   };
 
   return (
     <main className="bg-gray-50 min-h-screen p-8">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">{applicant.name}</h1>
-
-          <EditApplicantSkills
-            applicantId={applicant.id}
-            initialSkills={applicant.skills}
-          />
-        </div>
-
-        {/* …rest of the page… */}
+        <ApplicantStateProvider
+          applicantId={applicant.id}
+          initialName={applicant.name}
+          initialSkills={applicant.skills}
+        >
+          <ApplicantHeader applicantId={applicant.id} />
+          {/* You can render skills list here if you want */}
+        </ApplicantStateProvider>
       </div>
     </main>
   );

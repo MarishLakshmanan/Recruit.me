@@ -1,40 +1,30 @@
-// app/applicant/[id]/actions.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
 
-export async function updateApplicantSkills(applicantId: string, formData: FormData) {
-  const raw = formData.get("skills") as string | null;
-  if (!raw) throw new Error("No skills provided");
+// fake in-memory store for demo
+const fakeDb: Record<string, { name: string; skills: string[] }> = {};
 
-  let skills: string[];
+export async function updateApplicantSkills(
+  applicantId: string,
+  formData: FormData
+) {
+  const raw = formData.get("skills") as string; // JSON stringified array
+  let skills: string[] = [];
   try {
-    skills = JSON.parse(raw);
+    skills = JSON.parse(raw) as string[];
   } catch {
     throw new Error("Invalid skills payload");
   }
 
-  // Normalize & validate
-  const cleaned = Array.from(
-    new Set(
-      skills
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((s) => (s.length > 60 ? s.slice(0, 60) : s)) // cap length per skill
-        .map((s) => s) // keep original case; change if you prefer
-    )
-  );
+  // simulate latency
+  await new Promise((r) => setTimeout(r, 500));
 
-  if (cleaned.length > 50) {
-    throw new Error("Too many skills (max 50).");
-  }
+  // pretend save
+  const existing = fakeDb[applicantId] || { name: "Applicant Name", skills: [] };
+  fakeDb[applicantId] = { ...existing, skills };
 
-  // TODO: persist to your DB, e.g. Prisma:
-  // await prisma.applicant.update({
-  //   where: { id: applicantId },
-  //   data: { skills: cleaned },
-  // });
-
-  // Make the page show the new data
+  // when backend exists: await fetch(…)
   revalidatePath(`/applicant/${applicantId}`);
+  return { id: applicantId, skills };
 }

@@ -23,3 +23,9 @@ export type ApplicantProfile = {
   skills: string[];
   applications: string[];
 };
+
+export type CompanyProfile = {
+  id: string;
+  name: string;
+  jobs: string[];
+};

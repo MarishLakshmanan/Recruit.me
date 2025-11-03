@@ -35,3 +35,9 @@ export async function getUserRole() {
   const crumbs = JSON.parse(storeCokkie) as AuthPayload;
   return crumbs.role;
 }
+
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete("token");
+  return { success: true };
+}

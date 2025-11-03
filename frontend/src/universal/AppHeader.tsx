@@ -1,9 +1,14 @@
+import { logout } from "app/actions/fetch";
 import { LogOutIcon } from "lucide-react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const AppHeader = () => {
-  function handleLogout() {
-    console.log("logout");
+  async function handleLogout() {
+    const response = await logout();
+    if (response.success) {
+      redirect("/");
+    }
   }
   return (
     <div className="w-screen h-16  flex items-center justify-between py-4 px-8 bg-white">

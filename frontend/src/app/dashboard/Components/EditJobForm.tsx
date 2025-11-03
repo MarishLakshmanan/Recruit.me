@@ -29,7 +29,6 @@ export default function EditJobForm({
   const [isLoading, setIsLoading] = useState(true);
   const [existingJob, setExistingJob] = useState<FullJobDetails | null>(null);
 
-  // Fetch job details on mount
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
@@ -43,7 +42,6 @@ export default function EditJobForm({
         console.log("jobData", jobData);
         setExistingJob(jobData);
         
-        // Pre-fill form with existing values
         setTitle(jobData.title || "");
         setDescription(jobData.description || "");
         setSalary(jobData.salary?.toString() || "");
@@ -97,7 +95,7 @@ export default function EditJobForm({
     const payload: FetchPayload = {
       url: `${process.env.NEXT_PUBLIC_API_URL}/company/job/${jobId}`,
       options: {
-        method: "PATCH",
+        method: "PUT",
         body: JSON.stringify(updateJob),
       },
     };
@@ -107,7 +105,6 @@ export default function EditJobForm({
       alert("Job updated successfully");
       closeModal();
       
-      // Update the job in the parent component, preserving existing fields
       const updatedJob: Job = {
         id: jobId,
         title: title.trim(),

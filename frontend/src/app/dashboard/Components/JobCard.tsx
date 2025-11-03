@@ -2,6 +2,8 @@ import { fetchWithAuth, getUserRole } from "app/actions/fetch";
 import { useEffect, useState } from "react";
 import { FetchPayload, Job, Role } from "schema/shcema";
 import Button from "universal/Button";
+import Modal from "universal/Modal";
+import EditJobForm from "./EditJobForm";
 
 const JobCard = ({
   job,
@@ -11,6 +13,8 @@ const JobCard = ({
   editJob: (job: Job) => void;
 }) => {
   const [role, setRole] = useState<Role>(Role.COMPANY);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
   useEffect(() => {
     const fetchRole = async () => {
       const role = (await getUserRole()) as Role;
@@ -61,7 +65,7 @@ const JobCard = ({
           {job.status === "open" && (
             <Button label="Close" type="danger" onClick={handleClose} />
           )}
-          <Button label="Edit" type="primary" onClick={() => {}} />
+          <Button label="Edit" type="primary" onClick={() => setIsEditModalOpen(true)} />
         </div>
       );
     }
@@ -96,6 +100,19 @@ const JobCard = ({
       <div className="flex gap-2 items-center">
         <div>{actions()}</div>
       </div>
+
+      {isEditModalOpen && (
+        <Modal>
+          <EditJobForm
+            jobId={job.id}
+            closeModal={() => setIsEditModalOpen(false)}
+            editJob={(updatedJob) => {
+              editJob(updatedJob);
+              setIsEditModalOpen(false);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

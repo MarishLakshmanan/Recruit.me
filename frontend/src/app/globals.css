@@ -9,6 +9,7 @@
   --border: #003554;
   --text: #fff;
   --text-secondary: #000;
+  --danger: #ff0000;
 }
 
 @theme inline {
@@ -16,6 +17,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-danger: var(--danger);
   --color-accent: var(--accent);
   --color-border: var(--border);
   --color-text: var(--text);

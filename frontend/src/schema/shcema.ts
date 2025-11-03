@@ -27,5 +27,59 @@ export type ApplicantProfile = {
 export type CompanyProfile = {
   id: string;
   name: string;
-  jobs: string[];
+  jobs: Job[];
 };
+
+export type CreateJob = {
+  title: string;
+  description: string;
+  salary: number;
+  skills: string[];
+};
+export type Job = {
+  title: string;
+  applicant_count: number;
+  hired_count: number;
+  id: string;
+  post_date: string;
+  status: string;
+};
+
+export type SearchJobsResponse = {
+  jobs: Job[];
+  total: number;
+};
+export const fakeJobs: Job[] = [
+  {
+    title: "Software Engineer",
+    applicant_count: 10,
+    hired_count: 2,
+    id: "1",
+    post_date: "2021-01-01",
+    status: "open",
+  },
+  {
+    title: "Software Engineer",
+    applicant_count: 10,
+    hired_count: 2,
+    id: "1",
+    post_date: "2021-01-01",
+    status: "open",
+  },
+  {
+    title: "Software Engineer",
+    applicant_count: 10,
+    hired_count: 2,
+    id: "1",
+    post_date: "2021-01-01",
+    status: "open",
+  },
+  {
+    title: "Software Engineer",
+    applicant_count: 10,
+    hired_count: 2,
+    id: "1",
+    post_date: "2021-01-01",
+    status: "open",
+  },
+];

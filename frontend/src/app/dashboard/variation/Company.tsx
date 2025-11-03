@@ -1,13 +1,14 @@
 import { fetchWithAuth } from "app/actions/fetch";
-import React, { useEffect, useState } from "react";
-import { CompanyProfile, FetchPayload } from "schema/shcema";
+import { useEffect, useState } from "react";
+import { CompanyProfile, FetchPayload, Job } from "schema/shcema";
 import CompanyHeader from "../Components/CompanyHeader";
-import EditCompanyName from "../Components/EditCompanyName";
+import { fakeJobs } from "schema/shcema";
+import JobCard from "../Components/JobCard";
 
 const dashboard = () => {
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [name, setName] = useState<string | null>(null);
+
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const fetchProfile = async () => {
@@ -19,26 +20,50 @@ const dashboard = () => {
       };
       const profile = await fetchWithAuth(payload);
       setProfile(profile as CompanyProfile);
-      setName(profile.name);
+
       setIsLoading(false);
     };
     fetchProfile();
   }, []);
 
+  function addJob(job: Job) {
+    if (profile) {
+      setProfile({ ...profile, jobs: [...profile.jobs, job] });
+    }
+  }
+  function editJob(job: Job) {
+    if (profile) {
+      setProfile({
+        ...profile,
+        jobs: profile.jobs.map((j) => (j.id === job.id ? job : j)),
+      });
+    }
+  }
+
   if (isLoading) {
     return <h1>isLoading</h1>;
   }
-  if (profile && name) {
+  if (profile) {
     return (
-      <div>
-        <CompanyHeader name={name} />
-        <EditCompanyName
-          companyName={name}
-          changeName={(name: string) => {
-            setName(name);
-          }}
-        />
-      </div>
+      <>
+        <div className="flex flex-col h-full">
+          <CompanyHeader
+            profile={profile}
+            setProfile={setProfile}
+            addJob={addJob}
+            editJob={editJob}
+          />
+          <div className="mt-8 space-y-4 flex-1 shadow-md rounded-lg p-4 ">
+            {profile.jobs.length === 0 ? (
+              <div className="text-center text-gray-500">No jobs found</div>
+            ) : (
+              profile.jobs.map((job) => (
+                <JobCard key={job.id} job={job} editJob={editJob} />
+              ))
+            )}
+          </div>
+        </div>
+      </>
     );
   }
 };

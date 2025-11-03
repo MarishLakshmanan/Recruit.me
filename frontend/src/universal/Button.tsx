@@ -12,7 +12,7 @@ const Button = ({
 }) => {
   return (
     <button
-      className={`px-4 py-2 rounded-md bg-${type} rounded-md w-full text-white cursor-pointer`}
+      className={`px-4 py-2 rounded-md bg-${type} w-full text-white cursor-pointer`}
       onClick={onClick}
     >
       {label}

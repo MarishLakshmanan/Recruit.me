@@ -35,6 +35,7 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           type: activeTab,
         };
         await registerAction(formData);
+        alert("Registration successful");
         router.push("/login");
       } else {
         const formData: LoginData = {
@@ -43,11 +44,15 @@ const Form = ({ type }: { type: "register" | "login" }) => {
         };
         const response = await loginAction(formData);
         if (response.success) {
+          alert("Login successful");
           router.push("/dashboard");
+        } else {
+          alert("Login failed");
         }
       }
     } catch (error) {
       console.error(error);
+      alert(error as string);
     }
   };
 

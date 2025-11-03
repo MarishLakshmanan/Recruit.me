@@ -1,29 +1,38 @@
 "use client";
-import { fetchWithAuth } from "app/actions/fetch";
-import React, { useEffect } from "react";
-import { FetchPayload } from "schema/shcema";
+import { getUserRole } from "app/actions/fetch";
+import { useEffect, useState } from "react";
+import { Role } from "schema/shcema";
+import Applicant from "./variation/Applicant";
+import Company from "./variation/Company";
+import Container from "universal/Container";
 
 const page = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
+  const [userRole, setUserRole] = useState<Role | null>(null);
+  const [isLoading, setLoading] = useState(true);
   useEffect(() => {
-    const fetchUser = async () => {
-      const payload: FetchPayload = {
-        url: `${baseUrl}/company/profile`,
-        options: {
-          method: "GET",
-        },
-      };
-      try {
-        const response = await fetchWithAuth(payload);
-        console.log(response);
-      } catch (error) {
-        console.error(error);
-      }
+    const fetchUserRole = async () => {
+      const role = await getUserRole();
+      setUserRole(role);
+      setLoading(false);
     };
-    fetchUser();
+    fetchUserRole();
   }, []);
-  return <div>page</div>;
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (userRole === Role.COMPANY) {
+    return (
+      <Container>
+        <Company />;
+      </Container>
+    );
+  }
+  return (
+    <Container>
+      <Applicant />;
+    </Container>
+  );
 };
 
 export default page;

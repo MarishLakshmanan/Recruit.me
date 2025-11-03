@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { updateApplicantSkills } from "./actions";
-import { useApplicantState } from "./applicant-state";
+import { fetchWithAuth } from "app/actions/fetch";
+import { useRef, useState } from "react";
+import { ApplicantProfile, FetchPayload } from "schema/shcema";
 
-export default function EditApplicantSkills({ applicantId }: { applicantId: string }) {
+export default function EditApplicantSkills({
+  applicant,
+}: {
+  applicant: ApplicantProfile;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [error, setError] = useState<string | null>(null);
 
-  const { skills, setSkills } = useApplicantState();
-  const [draftSkills, setDraftSkills] = useState<string[]>(skills);
+  const [skills, setSkills] = useState<string[]>(applicant.skills);
   const [input, setInput] = useState("");
-
-  useEffect(() => setDraftSkills(skills), [skills]);
+  const [isPending, setIsPending] = useState(false);
 
   const show = () => {
-    setDraftSkills(skills);
     setInput("");
     setOpen(true);
     dialogRef.current?.showModal();
@@ -31,42 +32,40 @@ export default function EditApplicantSkills({ applicantId }: { applicantId: stri
   const addSkill = (s: string) => {
     const v = s.trim();
     if (!v) return;
-    if (draftSkills.some((x) => x.toLowerCase() === v.toLowerCase())) return;
-    setDraftSkills([...draftSkills, v]);
+    if (skills.some((x) => x.toLowerCase() === v.toLowerCase())) return;
+    setSkills([...skills, v]);
     setInput("");
   };
 
   const removeSkill = (s: string) => {
-    setDraftSkills(draftSkills.filter((x) => x !== s));
+    setSkills(skills.filter((x) => x !== s));
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       addSkill(input);
-    } else if (e.key === "Backspace" && input === "" && draftSkills.length > 0) {
+    } else if (e.key === "Backspace" && input === "" && skills.length > 0) {
       // quick backspace remove
-      removeSkill(draftSkills[draftSkills.length - 1]);
+      removeSkill(skills[skills.length - 1]);
     }
   };
 
   const onSubmit = async () => {
-    // optimistic
-    const prev = skills;
-    setSkills(draftSkills);
-
-    const fd = new FormData();
-    fd.set("skills", JSON.stringify(draftSkills));
-
-    startTransition(async () => {
-      try {
-        await updateApplicantSkills(applicantId, fd);
-        close();
-      } catch (e: any) {
-        setSkills(prev); 
-        setError(e?.message ?? "Failed to save skills");
-      }
-    });
+    const payload: FetchPayload = {
+      url: `${baseUrl}/applicant/profile`,
+      options: {
+        method: "PUT",
+        body: JSON.stringify({ skills }),
+      },
+    };
+    try {
+      const data = await fetchWithAuth(payload);
+      alert("Successfully updated skills");
+      close();
+    } catch (error) {
+      alert(error as string);
+    }
   };
 
   return (
@@ -107,39 +106,42 @@ export default function EditApplicantSkills({ applicantId }: { applicantId: stri
 
           {/* Chips */}
           <div className="flex flex-wrap gap-3">
-  {draftSkills.map((s) => (
-    <span
-      key={s}
-      className="group inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm text-blue-800 shadow-sm"
-    >
-      <span className="font-medium">{s}</span>
-      <button
-        type="button"
-        onClick={() => removeSkill(s)}
-        aria-label={`Remove ${s}`}
-        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-700 transition
+            {skills.map((s) => (
+              <span
+                key={s}
+                className="group inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm text-blue-800 shadow-sm"
+              >
+                <span className="font-medium">{s}</span>
+                <button
+                  type="button"
+                  onClick={() => removeSkill(s)}
+                  aria-label={`Remove ${s}`}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-700 transition
                    hover:bg-blue-200 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      >
-        ×
-      </button>
-    </span>
-  ))}
-</div>
-
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
           <div className="mt-6 flex justify-end gap-2">
-            <button type="button" onClick={close} className="rounded-md border px-4 py-2">
+            <button
+              type="button"
+              onClick={close}
+              className="rounded-md border px-4 py-2"
+            >
               Cancel
             </button>
             <button
               type="button"
               onClick={onSubmit}
-              disabled={pending}
+              disabled={isPending}
               className="rounded-md bg-gray-900 px-4 py-2 text-white disabled:opacity-70"
             >
-              {pending ? "Saving…" : "Save"}
+              {isPending ? "Saving…" : "Save"}
             </button>
           </div>
         </div>

@@ -25,3 +25,13 @@ export async function fetchWithAuth(payload: FetchPayload) {
   console.log("data", data);
   return data;
 }
+
+export async function getUserRole() {
+  const cookieStore = await cookies();
+  const storeCokkie = cookieStore.get("token")?.value;
+  if (!storeCokkie) {
+    throw new Error("Unauthorized");
+  }
+  const crumbs = JSON.parse(storeCokkie) as AuthPayload;
+  return crumbs.role;
+}

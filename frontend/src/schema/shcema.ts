@@ -16,3 +16,10 @@ export type FetchPayload = {
   url: string;
   options: RequestInit;
 };
+
+export type ApplicantProfile = {
+  id: string;
+  name: string;
+  skills: string[];
+  applications: string[];
+};

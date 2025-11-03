@@ -6,7 +6,7 @@ import Form from "universal/auth/Form";
 const Login = () => {
   return (
     <Container>
-      <div className="w-full  max-w-md mx-auto mt-[20%]">
+      <div className="w-full  max-w-md mx-auto mt-20">
         <h1 className="text-2xl font-bold text-center mb-4">LOGIN</h1>
         <Form type="login" />
         <p className="text-center text-sm text-gray-500 mt-4">

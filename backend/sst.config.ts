@@ -51,6 +51,7 @@ export default $config({
     api.route("PUT /company/profile", { handler: "packages/functions/company.updateProfile", ...cfg });
     api.route("POST /company/job", { handler: "packages/functions/company.createJob", ...cfg });
     api.route("GET /company/job/{jobId}", { handler: "packages/functions/company.getJob", ...cfg });
+    api.route("PUT /company/job/{jobId}", { handler: "packages/functions/company.updateJob", ...cfg });
     api.route("POST /company/job/{jobId}/activate", { handler: "packages/functions/company.activateJob", ...cfg });
     api.route("POST /company/job/{jobId}/close", { handler: "packages/functions/company.closeJob", ...cfg });
     api.route("POST /company/job/{jobId}/reopen", { handler: "packages/functions/company.reopenJob", ...cfg });

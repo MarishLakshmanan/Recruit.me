@@ -96,15 +96,19 @@ export const getJob: APIGatewayProxyHandlerV2 = async (event) => {
     const result = await client.query(
       `SELECT 
         j.id, 
-        j.title, 
+        j.title,
+        j.description,
+        j.salary,
         j.post_date,
         j.status,
         COUNT(DISTINCT a.id) as applicant_count,
-        COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count
+        COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count,
+        ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
       FROM jobs j
       LEFT JOIN applications a ON j.id = a.job_id
+      LEFT JOIN job_skills js ON j.id = js.job_id
       WHERE j.id = $1 AND j.company_id = $2
-      GROUP BY j.id`,
+      GROUP BY j.id, j.title, j.description, j.salary, j.post_date, j.status`,
       [jobId, user!.userId]
     );
 
@@ -113,6 +117,73 @@ export const getJob: APIGatewayProxyHandlerV2 = async (event) => {
     }
 
     return { statusCode: 200, body: JSON.stringify(result.rows[0]) };
+  } finally {
+    await client.end();
+  }
+};
+
+export const updateJob: APIGatewayProxyHandlerV2 = async (event) => {
+  const [user, error] = verifyTokenAndRole(event, ["company"]);
+  if (error) return UNAUTHORIZED;
+
+  const jobId = event.pathParameters?.jobId;
+  const { title, description, skills, salary } = JSON.parse(event.body || "{}");
+
+  const client = await getDbClient();
+  try {
+    const jobCheck = await client.query(
+      "SELECT id FROM jobs WHERE id = $1 AND company_id = $2",
+      [jobId, user!.userId]
+    );
+
+    if (jobCheck.rows.length === 0) {
+      return { statusCode: 404, body: JSON.stringify({ error: "Job not found" }) };
+    }
+
+    const updates: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      updates.push(`title = $${paramIndex}`);
+      params.push(title);
+      paramIndex++;
+    }
+
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex}`);
+      params.push(description);
+      paramIndex++;
+    }
+
+    if (salary !== undefined) {
+      updates.push(`salary = $${paramIndex}`);
+      params.push(salary);
+      paramIndex++;
+    }
+
+    if (updates.length > 0) {
+      params.push(jobId, user!.userId);
+      await client.query(
+        `UPDATE jobs SET ${updates.join(", ")} WHERE id = $${paramIndex} AND company_id = $${paramIndex + 1}`,
+        params
+      );
+    }
+
+    if (skills !== undefined) {
+      await client.query("DELETE FROM job_skills WHERE job_id = $1", [jobId]);
+
+      if (skills && skills.length > 0) {
+        for (const skill of skills) {
+          await client.query(
+            "INSERT INTO job_skills (job_id, skill) VALUES ($1, $2)",
+            [jobId, skill]
+          );
+        }
+      }
+    }
+
+    return { statusCode: 200, body: JSON.stringify({ message: "Job updated" }) };
   } finally {
     await client.end();
   }

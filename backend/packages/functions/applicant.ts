@@ -99,6 +99,7 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
         j.title,
         u.name as company_name,
         j.description,
+        j.post_date,
         ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
       FROM jobs j
       JOIN users u ON j.company_id = u.id
@@ -120,7 +121,7 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
       paramIndex++;
     }
 
-    query += ` GROUP BY j.id, j.title, u.name, j.description LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await client.query(query, params);

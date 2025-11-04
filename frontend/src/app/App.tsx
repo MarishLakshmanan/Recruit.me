@@ -7,7 +7,7 @@ import Company from "./dashboard/variation/Company";
 import Container from "universal/Container";
 import { useRouter } from "next/navigation";
 
-const page = () => {
+const App = () => {
   const [userRole, setUserRole] = useState<Role | null>(null);
   const [isLoading, setLoading] = useState(true);
   const router = useRouter();
@@ -18,7 +18,7 @@ const page = () => {
         setUserRole(role);
         setLoading(false);
       } catch (error) {
-        alert(error as string);
+        alert("You are not logged in");
         router.push("/login");
       }
     };
@@ -31,15 +31,15 @@ const page = () => {
   if (userRole === Role.COMPANY) {
     return (
       <Container>
-        <Company />;
+        <Company />
       </Container>
     );
   }
   return (
     <Container>
-      <Applicant />;
+      <Applicant />
     </Container>
   );
 };
 
-export default page;
+export default App;

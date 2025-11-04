@@ -13,7 +13,6 @@ export default $config({
 
     const vpc = new sst.aws.Vpc("RecruitVpc");
 
-    // make RDS DB
     const db = new sst.aws.Postgres("RecruitDB", {
       vpc,
       scaling: {
@@ -22,7 +21,6 @@ export default $config({
       },
     });
 
-    // make API gateway
     const api = new sst.aws.ApiGatewayV2("RecruitApi");
 
     const cfg = {
@@ -74,8 +72,17 @@ export default $config({
     api.route("GET /admin/company/{companyId}/jobs", { handler: "packages/functions/admin.getCompanyJobs", ...cfg });
     api.route("GET /admin/applicants", { handler: "packages/functions/admin.getApplicants", ...cfg });
 
+    const frontend = new sst.aws.Nextjs("RecruitFrontend", {
+      path: "../frontend",
+      environment: {
+        NEXT_PUBLIC_API_URL: api.url,
+      },
+      link: [api],
+    });
+
     return {
       api: api.url,
+      frontend: frontend.url,
       database: {
         host: db.host,
         port: db.port,

@@ -21,6 +21,10 @@ declare module "sst" {
       "type": "sst.aws.Postgres"
       "username": string
     }
+    "RecruitFrontend": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
     "RecruitVpc": {
       "type": "sst.aws.Vpc"
     }

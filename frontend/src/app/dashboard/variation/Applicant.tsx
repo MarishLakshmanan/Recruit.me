@@ -7,7 +7,7 @@ import {
   FetchPayload,
   Job,
   SearchJobsResponse,
-} from "schema/shcema";
+} from "schema/schema";
 import JobCard from "../Components/JobCard";
 
 const applicant = () => {

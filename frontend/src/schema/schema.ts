@@ -43,43 +43,10 @@ export type Job = {
   id: string;
   post_date: string;
   status: string;
+  skills?: string[];
 };
 
 export type SearchJobsResponse = {
   jobs: Job[];
   total: number;
 };
-export const fakeJobs: Job[] = [
-  {
-    title: "Software Engineer",
-    applicant_count: 10,
-    hired_count: 2,
-    id: "1",
-    post_date: "2021-01-01",
-    status: "open",
-  },
-  {
-    title: "Software Engineer",
-    applicant_count: 10,
-    hired_count: 2,
-    id: "1",
-    post_date: "2021-01-01",
-    status: "open",
-  },
-  {
-    title: "Software Engineer",
-    applicant_count: 10,
-    hired_count: 2,
-    id: "1",
-    post_date: "2021-01-01",
-    status: "open",
-  },
-  {
-    title: "Software Engineer",
-    applicant_count: 10,
-    hired_count: 2,
-    id: "1",
-    post_date: "2021-01-01",
-    status: "open",
-  },
-];

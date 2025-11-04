@@ -1,7 +1,7 @@
 "use client";
 import { getUserRole } from "app/actions/fetch";
 import { useEffect, useState } from "react";
-import { Role } from "schema/shcema";
+import { Role } from "schema/schema";
 import Applicant from "./dashboard/variation/Applicant";
 import Company from "./dashboard/variation/Company";
 import Container from "universal/Container";

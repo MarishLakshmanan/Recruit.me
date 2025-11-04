@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CreateJob, FetchPayload, Job } from "schema/shcema";
+import { CreateJob, FetchPayload, Job } from "schema/schema";
 import { fetchWithAuth } from "app/actions/fetch";
 
 type FullJobDetails = Job & {
@@ -41,7 +41,7 @@ export default function EditJobForm({
         const jobData = (await fetchWithAuth(payload)) as FullJobDetails;
         console.log("jobData", jobData);
         setExistingJob(jobData);
-        
+
         setTitle(jobData.title || "");
         setDescription(jobData.description || "");
         setSalary(jobData.salary?.toString() || "");
@@ -81,17 +81,21 @@ export default function EditJobForm({
     if (draftSkill.trim()) addSkill();
   };
 
-  const onSubmit = async (formData: FormData) => {
+  const onSubmit = async () => {
+    if (skills.length === 0) {
+      setError("Please add at least one skill");
+      return;
+    }
     setIsPending(true);
     setError(null);
-    
+
     const updateJob: CreateJob = {
       title: title.trim(),
       description: description.trim(),
       salary: salary ? parseFloat(salary.trim()) : 0,
       skills: skills.map((s) => s.trim()),
     };
-    
+
     const payload: FetchPayload = {
       url: `${process.env.NEXT_PUBLIC_API_URL}/company/job/${jobId}`,
       options: {
@@ -99,12 +103,12 @@ export default function EditJobForm({
         body: JSON.stringify(updateJob),
       },
     };
-    
+
     try {
-      const response = await fetchWithAuth(payload);
+      await fetchWithAuth(payload);
       alert("Job updated successfully");
       closeModal();
-      
+
       const updatedJob: Job = {
         id: jobId,
         title: title.trim(),
@@ -143,6 +147,8 @@ export default function EditJobForm({
         </label>
         <input
           value={title}
+          disabled={isPending}
+          required
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g., Frontend Engineer"
           className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
@@ -195,6 +201,7 @@ export default function EditJobForm({
         <input
           type="number"
           min="0"
+          required
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
           placeholder="e.g., 120000"
@@ -210,6 +217,7 @@ export default function EditJobForm({
         <textarea
           rows={3}
           value={description}
+          required
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Brief summary of responsibilities, requirements, etc."
           className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
@@ -237,4 +245,3 @@ export default function EditJobForm({
     </form>
   );
 }
-

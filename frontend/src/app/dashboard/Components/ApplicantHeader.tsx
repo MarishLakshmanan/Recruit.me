@@ -1,6 +1,6 @@
 "use client";
 
-import { ApplicantProfile } from "schema/shcema";
+import { ApplicantProfile } from "schema/schema";
 
 export default function ApplicantHeader({
   applicant,

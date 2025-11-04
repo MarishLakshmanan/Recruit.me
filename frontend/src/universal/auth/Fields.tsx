@@ -12,7 +12,7 @@ const Fields = ({
 }) => {
   return (
     <div>
-      <label className="block text-md font-medium text-foreground mb-2">
+      <label className="block text-md font-medium text-foreground mb-2 capitalize">
         {label}
       </label>
       <input

@@ -1,5 +1,5 @@
 "use client";
-import { Role } from "../../schema/shcema";
+import { Role } from "../../schema/schema";
 const Tabs = ({
   tabs,
   activeTab,

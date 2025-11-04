@@ -2,7 +2,7 @@
 
 import { fetchWithAuth } from "app/actions/fetch";
 import { useRef, useState } from "react";
-import { ApplicantProfile, FetchPayload } from "schema/shcema";
+import { ApplicantProfile, FetchPayload } from "schema/schema";
 
 export default function EditApplicantSkills({
   applicant,

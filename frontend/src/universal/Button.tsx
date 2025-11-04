@@ -1,5 +1,4 @@
-import { FormEvent, MouseEventHandler } from "react";
-import { ButtonType } from "schema/shcema";
+import { ButtonType } from "schema/schema";
 
 const Button = ({
   label,

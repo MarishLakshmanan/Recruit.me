@@ -2,14 +2,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { CreateJob, FetchPayload, Job } from "schema/shcema";
+import { CreateJob, FetchPayload, Job } from "schema/schema";
 import { fetchWithAuth } from "app/actions/fetch";
 
 export default function AddJobForm({
   closeModal,
   addJob,
-  editJob,
 }: {
   closeModal: () => void;
   addJob: (job: Job) => void;
@@ -17,6 +15,7 @@ export default function AddJobForm({
 }) {
   const [title, setTitle] = useState("");
   const [draftSkill, setDraftSkill] = useState("");
+
   const [skills, setSkills] = useState<string[]>([]);
   const [salary, setSalary] = useState("");
   const [description, setDescription] = useState("");
@@ -48,8 +47,12 @@ export default function AddJobForm({
     if (draftSkill.trim()) addSkill();
   };
 
-  const onSubmit = async (formData: FormData) => {
-    setIsPending(true);
+  const onSubmit = async () => {
+    if (skills.length === 0) {
+      setError("Please add at least one skill");
+      return;
+    }
+
     const createJob: CreateJob = {
       title: title.trim(),
       description: description.trim(),
@@ -95,6 +98,7 @@ export default function AddJobForm({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          required
           placeholder="e.g., Frontend Engineer"
           className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
         />
@@ -149,6 +153,7 @@ export default function AddJobForm({
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
           placeholder="e.g., 120000"
+          required
           className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
         />
       </div>
@@ -164,6 +169,7 @@ export default function AddJobForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Brief summary of responsibilities, requirements, etc."
           className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
+          required
         />
       </div>
 

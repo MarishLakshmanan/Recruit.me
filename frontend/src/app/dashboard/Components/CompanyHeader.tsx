@@ -1,6 +1,6 @@
 "use client";
 
-import { CompanyProfile, Job } from "schema/shcema";
+import { CompanyProfile, Job } from "schema/schema";
 import EditCompanyName from "./EditCompanyName";
 import { useState } from "react";
 import JobForm from "./JobForm";

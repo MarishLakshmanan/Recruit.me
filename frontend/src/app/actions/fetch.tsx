@@ -1,7 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { AuthPayload } from "schema/auth";
-import { FetchPayload } from "schema/shcema";
+import { FetchPayload } from "schema/schema";
 
 export async function fetchWithAuth(payload: FetchPayload) {
   console.log("fetchWithAuth", payload);

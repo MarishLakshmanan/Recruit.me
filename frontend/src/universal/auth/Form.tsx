@@ -4,7 +4,7 @@ import { useState } from "react";
 import Button from "universal/Button";
 import Fields from "./Fields";
 import Tabs from "./Tabs";
-import { Role } from "schema/shcema";
+import { Role } from "schema/schema";
 import { useRouter } from "next/navigation";
 import { LoginData, RegisterData } from "schema/auth";
 import { loginAction, registerAction } from "app/actions/auth";
@@ -71,7 +71,7 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           {type === "register" && (
             <div>
               <Fields
-                label="Username"
+                label={`${activeTab} name`}
                 value={username}
                 setValue={setUsername}
               />

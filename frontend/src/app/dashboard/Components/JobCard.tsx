@@ -1,6 +1,6 @@
 import { fetchWithAuth, getUserRole } from "app/actions/fetch";
 import { useEffect, useState } from "react";
-import { FetchPayload, Job, Role } from "schema/shcema";
+import { FetchPayload, Job, Role } from "schema/schema";
 import Button from "universal/Button";
 import Modal from "universal/Modal";
 import EditJobForm from "./EditJobForm";
@@ -14,7 +14,7 @@ const JobCard = ({
 }) => {
   const [role, setRole] = useState<Role>(Role.COMPANY);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
+
   useEffect(() => {
     const fetchRole = async () => {
       const role = (await getUserRole()) as Role;
@@ -31,7 +31,7 @@ const JobCard = ({
           method: "POST",
         },
       };
-      const response = await fetchWithAuth(payload);
+      await fetchWithAuth(payload);
       alert("Job activated successfully");
       editJob({ ...job, status: "open" });
     } catch (error) {
@@ -47,7 +47,7 @@ const JobCard = ({
           method: "POST",
         },
       };
-      const response = await fetchWithAuth(payload);
+      await fetchWithAuth(payload);
       alert("Job closed successfully");
       editJob({ ...job, status: "draft" });
     } catch (error) {
@@ -63,9 +63,13 @@ const JobCard = ({
             <Button label="Activate" type="primary" onClick={handleActivate} />
           )}
           {job.status === "open" && (
-            <Button label="Close" type="danger" onClick={handleClose} />
+            <Button label="Close" type="primary" onClick={handleClose} />
           )}
-          <Button label="Edit" type="primary" onClick={() => setIsEditModalOpen(true)} />
+          <Button
+            label="Edit"
+            type="primary"
+            onClick={() => setIsEditModalOpen(true)}
+          />
         </div>
       );
     }
@@ -83,14 +87,14 @@ const JobCard = ({
       <div>
         <h3>{job.title}</h3>
         <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
-        {/* {job.skills.map((skill) => (
+        {job.skills?.map((skill) => (
           <span
             key={skill}
             className="inline-flex mr-1 items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
           >
             {skill}
           </span>
-        ))} */}
+        ))}
       </div>
       <div>
         <div>

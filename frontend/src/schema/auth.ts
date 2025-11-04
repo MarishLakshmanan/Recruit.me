@@ -1,4 +1,4 @@
-import { Role } from "./shcema";
+import { Role } from "./schema";
 
 export type AuthPayload = {
   token: string;

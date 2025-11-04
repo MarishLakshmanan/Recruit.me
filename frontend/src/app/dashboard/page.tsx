@@ -1,12 +1,12 @@
 "use client";
 import { getUserRole } from "app/actions/fetch";
 import { useEffect, useState } from "react";
-import { Role } from "schema/shcema";
+import { Role } from "schema/schema";
 import Applicant from "./variation/Applicant";
 import Company from "./variation/Company";
 import Container from "universal/Container";
 
-const page = () => {
+const Dashboard = () => {
   const [userRole, setUserRole] = useState<Role | null>(null);
   const [isLoading, setLoading] = useState(true);
   useEffect(() => {
@@ -30,9 +30,9 @@ const page = () => {
   }
   return (
     <Container>
-      <Applicant />;
+      <Applicant />
     </Container>
   );
 };
 
-export default page;
+export default Dashboard;

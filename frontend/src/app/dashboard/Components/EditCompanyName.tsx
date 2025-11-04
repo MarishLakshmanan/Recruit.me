@@ -2,7 +2,7 @@
 
 import { fetchWithAuth } from "app/actions/fetch";
 import { useRef, useState } from "react";
-import { FetchPayload } from "schema/shcema";
+import { FetchPayload } from "schema/schema";
 
 export default function EditCompanyName({
   companyName,

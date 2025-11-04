@@ -1,5 +1,5 @@
 # CS 509 Recruit.me - Team Virginia
-This is a group project for CS 509 as Worcester Polytechnic Institute.
+This is a group project for CS 509 at Worcester Polytechnic Institute.
 
 [Hosted URL](https://d1q738xp14oj8f.cloudfront.net)
 [API URL](https://dw7hgbk9e7.execute-api.us-east-1.amazonaws.com)

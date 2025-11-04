@@ -2,10 +2,9 @@ import { fetchWithAuth } from "app/actions/fetch";
 import { useEffect, useState } from "react";
 import { CompanyProfile, FetchPayload, Job } from "schema/schema";
 import CompanyHeader from "../Components/CompanyHeader";
-import { fakeJobs } from "schema/schema";
 import JobCard from "../Components/JobCard";
 
-const dashboard = () => {
+const Company = () => {
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,4 +67,4 @@ const dashboard = () => {
   }
 };
 
-export default dashboard;
+export default Company;

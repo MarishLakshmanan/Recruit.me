@@ -10,7 +10,7 @@ import {
 } from "schema/schema";
 import JobCard from "../Components/JobCard";
 
-const applicant = () => {
+const Applicant = () => {
   const [profile, setProfile] = useState<ApplicantProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -68,4 +68,4 @@ const applicant = () => {
   }
 };
 
-export default applicant;
+export default Applicant;

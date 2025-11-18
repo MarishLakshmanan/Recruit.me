@@ -60,7 +60,8 @@ export default $config({
 
     api.route("GET /applicant/profile", { handler: "packages/functions/applicant.getProfile", ...cfg });
     api.route("PUT /applicant/profile", { handler: "packages/functions/applicant.updateProfile", ...cfg });
-    api.route("GET /jobs/search", { handler: "packages/functions/applicant.searchJobs", ...cfg });
+    api.route("GET /applicant/job/search", { handler: "packages/functions/applicant.searchJobs", ...cfg });
+    api.route("GET /applicant/job/{jobId}", { handler: "packages/functions/applicant.getJobDetail", ...cfg });
     api.route("POST /applicant/job/{jobId}/apply", { handler: "packages/functions/applicant.apply", ...cfg });
     api.route("DELETE /applicant/job/{jobId}/apply", { handler: "packages/functions/applicant.withdraw", ...cfg });
     api.route("POST /applicant/job/{jobId}/offer/accept", { handler: "packages/functions/applicant.acceptOffer", ...cfg });

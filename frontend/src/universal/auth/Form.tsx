@@ -83,7 +83,12 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           </div>
 
           <div>
-            <Fields label="Password" value={password} setValue={setPassword} />
+            <Fields
+              type="password"
+              label="Password"
+              value={password}
+              setValue={setPassword}
+            />
           </div>
         </div>
 

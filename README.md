@@ -1,4 +1,5 @@
 # CS 509 Recruit.me - Team Virginia
+
 This is a group project for CS 509 at Worcester Polytechnic Institute.
 
 [Hosted URL](https://d1q738xp14oj8f.cloudfront.net)
@@ -48,3 +49,18 @@ Built with Next.js and AWS.
 - **Authentication**: JWT (JSON Web Tokens)
 - **Network**: VPC with private subnets
 
+### Completed Use cases on Iteration 1
+
+##### Company
+
+- Register Company
+- Edit Company Profile
+- Create Job
+- Activate Job
+- Close Job
+
+##### Applicant
+
+- Register Account
+- Edit Profile
+- Search Job – Browse and search available job posts. - Partially works without search function(Only listing is available)

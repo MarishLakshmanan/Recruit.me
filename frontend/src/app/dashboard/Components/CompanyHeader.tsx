@@ -39,7 +39,7 @@ export default function CompanyHeader({
           Add Job
         </button>
         {isModalOpen && (
-          <Modal>
+          <Modal onClose={() => setIsModalOpen(false)}>
             <JobForm
               addJob={addJob}
               editJob={editJob}

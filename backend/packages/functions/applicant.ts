@@ -65,12 +65,18 @@ export const updateProfile: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
     if (name) {
-      await client.query("UPDATE users SET name = $1 WHERE id = $2", [name, user!.userId]);
+      await client.query("UPDATE users SET name = $1 WHERE id = $2", [
+        name,
+        user!.userId,
+      ]);
     }
 
     if (skills) {
-      await client.query("DELETE FROM applicant_skills WHERE applicant_id = $1", [user!.userId]);
-      
+      await client.query(
+        "DELETE FROM applicant_skills WHERE applicant_id = $1",
+        [user!.userId]
+      );
+
       for (const skill of skills) {
         await client.query(
           "INSERT INTO applicant_skills (applicant_id, skill) VALUES ($1, $2)",
@@ -79,7 +85,92 @@ export const updateProfile: APIGatewayProxyHandlerV2 = async (event) => {
       }
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Profile updated" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Profile updated" }),
+    };
+  } finally {
+    await client.end();
+  }
+};
+
+export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
+  const [user, error] = verifyTokenAndRole(event, ["applicant"]);
+  if (error) return UNAUTHORIZED;
+
+  const jobId = event.pathParameters?.jobId;
+
+  const client = await getDbClient();
+  try {
+    // First get the job details and application status
+    const jobResult = await client.query(
+      `SELECT 
+        j.id,
+        j.title,
+        j.description,
+        j.salary,
+        j.post_date,
+        a.id as application_id,
+        a.offer_status
+      FROM jobs j
+      LEFT JOIN applications a ON j.id = a.job_id AND a.applicant_id = $2
+      WHERE j.id = $1 AND j.status = 'open'`,
+      [jobId, user!.userId]
+    );
+
+    if (jobResult.rows.length === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Job not found or not open" }),
+      };
+    }
+
+    const job = jobResult.rows[0];
+
+    // Get skills separately
+    const skillsResult = await client.query(
+      "SELECT skill FROM job_skills WHERE job_id = $1",
+      [jobId]
+    );
+
+    const skills = skillsResult.rows.map((r) => r.skill);
+
+    // Determine application status
+    let applicationStatus = "Not Applied";
+    if (job.application_id) {
+      // Application exists
+      if (job.offer_status) {
+        switch (job.offer_status) {
+          case "rejected":
+            applicationStatus = "Rejected";
+            break;
+          case "offered":
+            applicationStatus = "Offer";
+            break;
+          case "accepted":
+            applicationStatus = "Accepted";
+            break;
+          default:
+            applicationStatus = "Applied";
+        }
+      } else {
+        // Application exists but no offer_status set (shouldn't happen, but handle it)
+        applicationStatus = "Applied";
+      }
+    }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        id: job.id,
+        title: job.title,
+        description: job.description,
+        salary: job.salary,
+        post_date: job.post_date,
+        skills: skills,
+        application_status: applicationStatus,
+      }),
+    };
   } finally {
     await client.end();
   }
@@ -121,12 +212,15 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
       paramIndex++;
     }
 
-    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date LIMIT $${paramIndex} OFFSET $${
+      paramIndex + 1
+    }`;
     params.push(limit, offset);
 
     const result = await client.query(query, params);
 
-    let countQuery = "SELECT COUNT(DISTINCT j.id) FROM jobs j JOIN users u ON j.company_id = u.id WHERE j.status = 'open'";
+    let countQuery =
+      "SELECT COUNT(DISTINCT j.id) FROM jobs j JOIN users u ON j.company_id = u.id WHERE j.status = 'open'";
     const countParams: any[] = [];
     let countParamIndex = 1;
 
@@ -169,7 +263,10 @@ export const apply: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (jobCheck.rows.length === 0) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Job not found or not open" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Job not found or not open" }),
+      };
     }
 
     const applicationId = crypto.randomUUID();
@@ -178,10 +275,16 @@ export const apply: APIGatewayProxyHandlerV2 = async (event) => {
       [applicationId, jobId, user!.userId]
     );
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Application submitted" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Application submitted" }),
+    };
   } catch (error: any) {
     if (error.code === "23505") {
-      return { statusCode: 400, body: JSON.stringify({ error: "Already applied" }) };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Already applied" }),
+      };
     }
     throw error;
   } finally {
@@ -203,10 +306,16 @@ export const withdraw: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (result.rowCount === 0) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Application not found" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Application not found" }),
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Application withdrawn" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Application withdrawn" }),
+    };
   } finally {
     await client.end();
   }
@@ -226,10 +335,16 @@ export const acceptOffer: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (result.rowCount === 0) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Offer not found" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Offer not found" }),
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Offer accepted" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Offer accepted" }),
+    };
   } finally {
     await client.end();
   }
@@ -249,10 +364,16 @@ export const rescindAcceptance: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (result.rowCount === 0) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Accepted offer not found" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Accepted offer not found" }),
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Acceptance rescinded" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Acceptance rescinded" }),
+    };
   } finally {
     await client.end();
   }
@@ -272,10 +393,16 @@ export const rejectOffer: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (result.rowCount === 0) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Offer not found" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Offer not found" }),
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ message: "Offer rejected" }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Offer rejected" }),
+    };
   } finally {
     await client.end();
   }

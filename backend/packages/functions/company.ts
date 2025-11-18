@@ -15,17 +15,19 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     const jobsResult = await client.query(
-      `SELECT 
-        j.id, 
-        j.title, 
+      `SELECT
+        j.id,
+        j.title,
         j.post_date,
         j.status,
         COUNT(DISTINCT a.id) as applicant_count,
-        COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count
+        COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count,
+        ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
       FROM jobs j
       LEFT JOIN applications a ON j.id = a.job_id
+      LEFT JOIN job_skills js ON j.id = js.job_id
       WHERE j.company_id = $1
-      GROUP BY j.id`,
+      GROUP BY j.id, j.title, j.post_date, j.status`,
       [user!.userId]
     );
 

@@ -4,6 +4,7 @@ import { FetchPayload, Job, Role } from "schema/schema";
 import Button from "universal/Button";
 import Modal from "universal/Modal";
 import EditJobForm from "./EditJobForm";
+import Link from "next/link";
 
 const JobCard = ({
   job,
@@ -84,29 +85,59 @@ const JobCard = ({
 
   return (
     <div className="border-b p-4 border-gray-300 flex justify-between items-center">
-      <div>
-        <h3>{job.title}</h3>
-        <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
-        {job.skills?.map((skill) => (
-          <span
-            key={skill}
-            className="inline-flex mr-1 items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
-          >
-            {skill}
-          </span>
-        ))}
-      </div>
-      <div>
-        <div>
-          applicants:<span>{job.applicant_count}</span>
-        </div>
-      </div>
-      <div className="flex gap-2 items-center">
-        <div>{actions()}</div>
-      </div>
+      {role === Role.APPLICANT ? (
+        <Link
+          href={`/job/${job.id}`}
+          className="flex-1 flex justify-between items-center cursor-pointer hover:bg-gray-50 -m-4 p-4"
+        >
+          <div>
+            <h3>{job.title}</h3>
+            <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
+            {job.skills?.map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex mr-1 items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+          <div>
+            <div>
+              applicants:<span>{job.applicant_count}</span>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div>{actions()}</div>
+          </div>
+        </Link>
+      ) : (
+        <>
+          <div>
+            <h3>{job.title}</h3>
+            <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
+            {job.skills?.map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex mr-1 items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+          <div>
+            <div>
+              applicants:<span>{job.applicant_count}</span>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div>{actions()}</div>
+          </div>
+        </>
+      )}
 
       {isEditModalOpen && (
-        <Modal>
+        <Modal onClose={() => setIsEditModalOpen(false)}>
           <EditJobForm
             jobId={job.id}
             closeModal={() => setIsEditModalOpen(false)}

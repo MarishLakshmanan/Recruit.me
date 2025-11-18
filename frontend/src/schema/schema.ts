@@ -50,3 +50,16 @@ export type SearchJobsResponse = {
   jobs: Job[];
   total: number;
 };
+
+export type ApplicationStatus =
+  | "Not Applied"
+  | "Applied"
+  | "Rejected"
+  | "Offer"
+  | "Accepted";
+
+export type JobDetail = Job & {
+  description?: string;
+  salary?: number;
+  applicationStatus?: ApplicationStatus;
+};

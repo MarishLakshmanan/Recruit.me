@@ -4,9 +4,11 @@ const Fields = ({
   label,
   value,
   setValue,
+  type,
 }: {
   label: string;
   value: string;
+  type?: "text" | "password" | "email";
 
   setValue: (value: string) => void;
 }) => {
@@ -16,7 +18,7 @@ const Fields = ({
         {label}
       </label>
       <input
-        type="text"
+        type={type || "text"}
         onChange={(e) => setValue(e.target.value)}
         value={value}
         required

@@ -7,25 +7,15 @@ import SkillsFilter from "app/dashboard/Components/SkillsFilter";
 import { useEffect, useState, useMemo } from "react";
 import {
   ApplicantProfile,
+  Application,
   FetchPayload,
   Job,
   SearchJobsResponse,
 } from "schema/schema";
 import JobCard from "../Components/JobCard";
 
-type Application = {
-  job_id: string;
-  company_name: string;
-  job_title: string;
-  status: string;
-  post_date: string;
-  apply_date: string;
-  applicant_count: number;
-  skills: string[];
-};
-
 const Applicant = () => {
-  const [profile, setProfile] = useState<ApplicantProfile | null>(null);
+  const [profile, setProfile] = useState<(ApplicantProfile & { applications?: Application[] }) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [openJobs, setOpenJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -34,41 +24,49 @@ const Applicant = () => {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      let payload: FetchPayload = {
-        url: `${baseUrl}/applicant/profile`,
-        options: {
-          method: "GET",
-        },
-      };
-      const profileData = (await fetchWithAuth(payload)) as ApplicantProfile & {
-        applications: Application[];
-      };
-      setProfile(profileData);
-      setApplications(profileData.applications || []);
-      setIsLoading(false);
-
-      // Build search URL with filters
-      const searchParams = new URLSearchParams();
-      if (companyNameFilter) {
-        searchParams.append("company", companyNameFilter);
-      }
-      if (selectedSkills.length > 0) {
-        // For now, use first skill - backend supports single skill filter
-        searchParams.append("skill", selectedSkills[0]);
-      }
-
-      payload = {
-        url: `${baseUrl}/jobs/search?${searchParams.toString()}`,
-        options: {
-          method: "GET",
-        },
-      };
-      const jobsResponse = (await fetchWithAuth(payload)) as SearchJobsResponse;
-      setOpenJobs(jobsResponse.jobs as Job[]);
+  const fetchProfile = async () => {
+    let payload: FetchPayload = {
+      url: `${baseUrl}/applicant/profile`,
+      options: {
+        method: "GET",
+      },
     };
-    fetchProfile();
+    const profileData = (await fetchWithAuth(payload)) as ApplicantProfile & {
+      applications: Application[];
+    };
+    setProfile({
+      ...profileData,
+      applications: profileData.applications || [],
+    });
+    setApplications(profileData.applications || []);
+
+    // Build search URL with filters
+    const searchParams = new URLSearchParams();
+    if (companyNameFilter) {
+      searchParams.append("company", companyNameFilter);
+    }
+    if (selectedSkills.length > 0) {
+      // For now, use first skill - backend supports single skill filter
+      searchParams.append("skill", selectedSkills[0]);
+    }
+
+    payload = {
+      url: `${baseUrl}/jobs/search?${searchParams.toString()}`,
+      options: {
+        method: "GET",
+      },
+    };
+    const jobsResponse = (await fetchWithAuth(payload)) as SearchJobsResponse;
+    setOpenJobs(jobsResponse.jobs as Job[]);
+  };
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsLoading(true);
+      await fetchProfile();
+      setIsLoading(false);
+    };
+    loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyNameFilter, selectedSkills]);
 
@@ -95,7 +93,7 @@ const Applicant = () => {
       title: app.job_title,
       post_date: app.post_date,
       status: "open",
-      applicant_count: app.applicant_count,
+      applicant_count: typeof app.applicant_count === 'string' ? parseInt(app.applicant_count, 10) : app.applicant_count,
       hired_count: 0,
       skills: app.skills || [],
       applicationStatus: mapApplicationStatus(app.status),
@@ -191,7 +189,7 @@ const Applicant = () => {
       <main className="flex flex-col h-full">
         <div className="flex flex-row gap-4 items-center justify-between">
           <ApplicantHeader applicant={profile} />
-          <EditApplicantSkills applicant={profile} />
+          <EditApplicantSkills applicant={profile} onUpdate={fetchProfile} />
         </div>
 
         <div className="mt-8 space-y-4">

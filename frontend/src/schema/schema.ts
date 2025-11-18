@@ -17,11 +17,22 @@ export type FetchPayload = {
   options: RequestInit;
 };
 
+export type Application = {
+  job_id: string;
+  company_name: string;
+  job_title: string;
+  status: string;
+  post_date: string;
+  apply_date: string;
+  applicant_count: number | string;
+  skills: string[];
+};
+
 export type ApplicantProfile = {
   id: string;
   name: string;
   skills: string[];
-  applications: string[];
+  applications?: Application[];
 };
 
 export type CompanyProfile = {

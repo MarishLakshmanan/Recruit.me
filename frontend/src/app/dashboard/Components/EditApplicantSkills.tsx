@@ -2,12 +2,14 @@
 
 import { fetchWithAuth } from "app/actions/fetch";
 import { useRef, useState } from "react";
-import { ApplicantProfile, FetchPayload } from "schema/schema";
+import { ApplicantProfile, Application, FetchPayload } from "schema/schema";
 
 export default function EditApplicantSkills({
   applicant,
+  onUpdate,
 }: {
   applicant: ApplicantProfile;
+  onUpdate?: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
@@ -20,6 +22,7 @@ export default function EditApplicantSkills({
 
   const show = () => {
     setInput("");
+    setSkills(applicant.skills); // Refresh skills from prop
     setOpen(true);
     dialogRef.current?.showModal();
   };
@@ -52,6 +55,7 @@ export default function EditApplicantSkills({
   };
 
   const onSubmit = async () => {
+    setIsPending(true);
     const payload: FetchPayload = {
       url: `${baseUrl}/applicant/profile`,
       options: {
@@ -63,8 +67,15 @@ export default function EditApplicantSkills({
       const data = await fetchWithAuth(payload);
       alert("Successfully updated skills");
       close();
+      // Notify parent to refetch profile data
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (error) {
       alert(error as string);
+      setError(error as string);
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -92,7 +103,7 @@ export default function EditApplicantSkills({
           background: "transparent",
         }}
       >
-        <div className="bg-white rounded-xl p-6 shadow-lg w-[560px]">
+        <div className="bg-white rounded-xl p-6 shadow-lg w-[800px] max-h-[90vh] overflow-y-auto">
           <h2 className="mb-4 text-lg font-semibold">Skills Required</h2>
 
           {/* Input */}
@@ -105,7 +116,7 @@ export default function EditApplicantSkills({
           />
 
           {/* Chips */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mb-6">
             {skills.map((s) => (
               <span
                 key={s}
@@ -125,13 +136,43 @@ export default function EditApplicantSkills({
             ))}
           </div>
 
+          {/* Applied Jobs Section */}
+          {applicant.applications && applicant.applications.length > 0 && (
+            <div className="mt-6 border-t pt-6">
+              <h2 className="mb-4 text-lg font-semibold">Applied Jobs</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {applicant.applications.map((application: Application) => {
+                  const applyDate = new Date(application.apply_date);
+                  const formattedDate = `${String(applyDate.getDate()).padStart(2, '0')}-${String(applyDate.getMonth() + 1).padStart(2, '0')}-${applyDate.getFullYear()}`;
+                  
+                  return (
+                    <div
+                      key={application.job_id}
+                      className="bg-gray-100 rounded-lg p-4 border border-gray-200"
+                    >
+                      <h3 className="font-semibold text-base mb-2">
+                        {application.job_title}
+                      </h3>
+                      <p className="text-sm text-gray-700 mb-1">
+                        Company: {application.company_name}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        Applied: {formattedDate}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
           <div className="mt-6 flex justify-end gap-2">
             <button
               type="button"
               onClick={close}
-              className="rounded-md border px-4 py-2"
+              className="rounded-md border px-4 py-2 bg-white hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -139,7 +180,7 @@ export default function EditApplicantSkills({
               type="button"
               onClick={onSubmit}
               disabled={isPending}
-              className="rounded-md bg-gray-900 px-4 py-2 text-white disabled:opacity-70"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-70 hover:bg-blue-700"
             >
               {isPending ? "Saving…" : "Save"}
             </button>

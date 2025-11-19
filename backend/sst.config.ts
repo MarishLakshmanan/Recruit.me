@@ -57,6 +57,7 @@ export default $config({
     api.route("PUT /company/job/{jobId}/applicant/{applicantId}/rating", { handler: "packages/functions/company.rateApplicant", ...cfg });
     api.route("POST /company/job/{jobId}/applicant/{applicantId}/offer", { handler: "packages/functions/company.extendOffer", ...cfg });
     api.route("DELETE /company/job/{jobId}/applicant/{applicantId}/offer", { handler: "packages/functions/company.rescindOffer", ...cfg });
+    api.route("GET /company/applicants/search", { handler: "packages/functions/company.searchApplicants", ...cfg });
 
     api.route("GET /applicant/profile", { handler: "packages/functions/applicant.getProfile", ...cfg });
     api.route("PUT /applicant/profile", { handler: "packages/functions/applicant.updateProfile", ...cfg });

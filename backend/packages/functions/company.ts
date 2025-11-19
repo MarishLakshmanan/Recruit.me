@@ -467,3 +467,82 @@ export const rescindOffer: APIGatewayProxyHandlerV2 = async (event) => {
     await client.end();
   }
 };
+
+export const searchApplicants: APIGatewayProxyHandlerV2 = async (event) => {
+  const [user, error] = verifyTokenAndRole(event, ["company"]);
+  if (error) return UNAUTHORIZED;
+
+  const search = event.queryStringParameters?.search;
+  const skills = event.queryStringParameters?.skills;
+  const offset = parseInt(event.queryStringParameters?.offset || "0");
+  const limit = parseInt(event.queryStringParameters?.limit || "20");
+
+  const client = await getDbClient();
+  try {
+    let applicantsQuery = `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.created_at,
+        COUNT(DISTINCT a.id) as application_count,
+        ARRAY_AGG(DISTINCT s.skill) FILTER (WHERE s.skill IS NOT NULL) as skills
+      FROM users u
+      LEFT JOIN applications a ON u.id = a.applicant_id
+      LEFT JOIN applicant_skills s ON u.id = s.applicant_id
+      WHERE u.type = 'applicant'
+    `;
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (search && search.trim()) {
+      applicantsQuery += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      params.push(`%${search.trim()}%`);
+      paramIndex++;
+    }
+
+    if (skills && skills.trim()) {
+      applicantsQuery += ` AND EXISTS (SELECT 1 FROM applicant_skills WHERE applicant_id = u.id AND skill ILIKE $${paramIndex})`;
+      params.push(`%${skills.trim()}%`);
+      paramIndex++;
+    }
+
+    applicantsQuery += ` GROUP BY u.id, u.name, u.email, u.created_at
+                        ORDER BY u.created_at DESC
+                        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const applicantsResult = await client.query(applicantsQuery, params);
+
+    let countQuery = `
+      SELECT COUNT(DISTINCT u.id)
+      FROM users u
+      WHERE u.type = 'applicant'
+    `;
+    const countParams: any[] = [];
+    let countParamIndex = 1;
+
+    if (search && search.trim()) {
+      countQuery += ` AND (u.name ILIKE $${countParamIndex} OR u.email ILIKE $${countParamIndex})`;
+      countParams.push(`%${search.trim()}%`);
+      countParamIndex++;
+    }
+
+    if (skills && skills.trim()) {
+      countQuery += ` AND EXISTS (SELECT 1 FROM applicant_skills WHERE applicant_id = u.id AND skill ILIKE $${countParamIndex})`;
+      countParams.push(`%${skills.trim()}%`);
+    }
+
+    const countResult = await client.query(countQuery, countParams);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        applicants: applicantsResult.rows,
+        total: parseInt(countResult.rows[0].count),
+      }),
+    };
+  } finally {
+    await client.end();
+  }
+};

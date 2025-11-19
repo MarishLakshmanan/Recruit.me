@@ -51,6 +51,7 @@ npm run remove
 - `PUT /company/job/{jobId}/applicant/{applicantId}/rating` - Rate applicant
 - `POST /company/job/{jobId}/applicant/{applicantId}/offer` - Extend offer
 - `DELETE /company/job/{jobId}/applicant/{applicantId}/offer` - Rescind offer
+- `GET /company/applicants/search` - Search all applicants (for new use case)
 
 ### Applicant Endpoints
 

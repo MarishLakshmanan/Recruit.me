@@ -3,7 +3,7 @@
 This is a group project for CS 509 at Worcester Polytechnic Institute.
 
 [Hosted URL](https://d1q738xp14oj8f.cloudfront.net)
-[API URL](https://dw7hgbk9e7.execute-api.us-east-1.amazonaws.com)
+[API URL](https://p1lmagd5i5.execute-api.us-east-1.amazonaws.com)
 
 A recruitment platform that connects companies with qualified applicants.
 Built with Next.js and AWS.

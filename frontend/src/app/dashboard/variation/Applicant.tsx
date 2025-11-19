@@ -2,9 +2,10 @@ import { fetchWithAuth } from "app/actions/fetch";
 import ApplicantHeader from "app/dashboard/Components/ApplicantHeader";
 import EditApplicantSkills from "app/dashboard/Components/EditApplicantSkills";
 import StatusFilter from "app/dashboard/Components/StatusFilter";
-import CompanyNameFilter from "app/dashboard/Components/CompanyNameFilter";
+import SearchFilter from "app/dashboard/Components/SearchFilter";
 import SkillsFilter from "app/dashboard/Components/SkillsFilter";
-import { useEffect, useState, useMemo } from "react";
+import Pagination from "app/dashboard/Components/Pagination";
+import { useEffect, useState } from "react";
 import {
   ApplicantProfile,
   FetchPayload,
@@ -13,173 +14,100 @@ import {
 } from "schema/schema";
 import JobCard from "../Components/JobCard";
 
-type Application = {
-  job_id: string;
+type JobWithStatus = Job & {
+  application_status: string;
   company_name: string;
-  job_title: string;
-  status: string;
-  post_date: string;
-  apply_date: string;
-  applicant_count: number;
-  skills: string[];
 };
 
 const Applicant = () => {
   const [profile, setProfile] = useState<ApplicantProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [openJobs, setOpenJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [jobs, setJobs] = useState<JobWithStatus[]>([]);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState<string | null>("All");
-  const [companyNameFilter, setCompanyNameFilter] = useState("");
+  const [searchFilter, setSearchFilter] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [allSkills, setAllSkills] = useState<string[]>([]);
+  const pageSize = 10;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchProfile = async () => {
-      let payload: FetchPayload = {
+      const payload: FetchPayload = {
         url: `${baseUrl}/applicant/profile`,
         options: {
           method: "GET",
         },
       };
-      const profileData = (await fetchWithAuth(payload)) as ApplicantProfile & {
-        applications: Application[];
-      };
+      const profileData = (await fetchWithAuth(payload)) as ApplicantProfile;
       setProfile(profileData);
-      setApplications(profileData.applications || []);
       setIsLoading(false);
-
-      // Build search URL with filters
-      const searchParams = new URLSearchParams();
-      if (companyNameFilter) {
-        searchParams.append("company", companyNameFilter);
-      }
-      if (selectedSkills.length > 0) {
-        // For now, use first skill - backend supports single skill filter
-        searchParams.append("skill", selectedSkills[0]);
-      }
-
-      payload = {
-        url: `${baseUrl}/jobs/search?${searchParams.toString()}`,
-        options: {
-          method: "GET",
-        },
-      };
-      const jobsResponse = (await fetchWithAuth(payload)) as SearchJobsResponse;
-      setOpenJobs(jobsResponse.jobs as Job[]);
     };
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyNameFilter, selectedSkills]);
+  }, [baseUrl]);
 
-  // Combine and filter jobs
-  const filteredJobs = useMemo(() => {
-    const allJobs: (Job & {
-      applicationStatus?: string;
-      company_name?: string;
-    })[] = [];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      if (!profile) return;
 
-    // Add open jobs (not applied)
-    const appliedJobIds = new Set(applications.map((app) => app.job_id));
-    const openJobsNotApplied = openJobs
-      .filter((job) => !appliedJobIds.has(job.id))
-      .map((job) => ({
-        ...job,
-        applicationStatus: "Open",
-      }));
-    allJobs.push(...openJobsNotApplied);
+      setJobsLoading(true);
+      try {
+        const searchParams = new URLSearchParams();
+        if (searchFilter.trim()) {
+          searchParams.append("search", searchFilter.trim());
+        }
+        if (selectedSkills.length > 0) {
+          searchParams.append("skill", selectedSkills[0]);
+        }
+        if (selectedStatus && selectedStatus !== "All") {
+          searchParams.append("status", selectedStatus);
+        }
+        searchParams.append("offset", ((currentPage - 1) * pageSize).toString());
+        searchParams.append("limit", pageSize.toString());
 
-    // Add jobs from applications
-    const applicationJobs = applications.map((app) => ({
-      id: app.job_id,
-      title: app.job_title,
-      post_date: app.post_date,
-      status: "open",
-      applicant_count: app.applicant_count,
-      hired_count: 0,
-      skills: app.skills || [],
-      applicationStatus: mapApplicationStatus(app.status),
-      company_name: app.company_name,
-    }));
-    allJobs.push(...applicationJobs);
+        const payload: FetchPayload = {
+          url: `${baseUrl}/applicant/job/search?${searchParams.toString()}`,
+          options: {
+            method: "GET",
+          },
+        };
+        const response = (await fetchWithAuth(payload)) as SearchJobsResponse & {
+          jobs: JobWithStatus[];
+        };
 
-    // Apply filters
-    let filtered = allJobs;
+        setJobs(response.jobs || []);
+        setTotalJobs(response.total || 0);
 
-    // Status filter
-    if (selectedStatus && selectedStatus !== "All") {
-      if (selectedStatus === "Open") {
-        filtered = filtered.filter((job) => job.applicationStatus === "Open");
-      } else {
-        filtered = filtered.filter(
-          (job) => job.applicationStatus === selectedStatus
-        );
+        const skillsSet = new Set<string>();
+        response.jobs.forEach((job) => {
+          job.skills?.forEach((skill) => skillsSet.add(skill));
+        });
+        setAllSkills(Array.from(skillsSet).sort());
+      } catch (error) {
+        console.error('Failed to fetch jobs:', error);
+        setJobs([]);
+        setTotalJobs(0);
+      } finally {
+        setJobsLoading(false);
       }
-    }
+    };
 
-    // Company name filter (client-side for applications)
-    if (companyNameFilter) {
-      filtered = filtered.filter((job) => {
-        const companyName = job.company_name || "";
-        return companyName
-          .toLowerCase()
-          .includes(companyNameFilter.toLowerCase());
-      });
-    }
+    fetchJobs();
+  }, [profile, searchFilter, selectedSkills, selectedStatus, currentPage, pageSize, baseUrl]);
 
-    // Skills filter
-    if (selectedSkills.length > 0) {
-      filtered = filtered.filter((job) => {
-        if (!job.skills || job.skills.length === 0) return false;
-        return selectedSkills.some((skill) =>
-          job.skills!.some(
-            (jobSkill) => jobSkill.toLowerCase() === skill.toLowerCase()
-          )
-        );
-      });
-    }
+  const totalPages = Math.ceil(totalJobs / pageSize);
 
-    return filtered;
-  }, [
-    openJobs,
-    applications,
-    selectedStatus,
-    companyNameFilter,
-    selectedSkills,
-  ]);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-  // Get all unique skills from all jobs
-  const allSkills = useMemo(() => {
-    const skillsSet = new Set<string>();
-    openJobs.forEach((job) => {
-      job.skills?.forEach((skill) => skillsSet.add(skill));
-    });
-    applications.forEach((app) => {
-      app.skills?.forEach((skill) => skillsSet.add(skill));
-    });
-    return Array.from(skillsSet).sort();
-  }, [openJobs, applications]);
-
-  function mapApplicationStatus(status: string): string {
-    switch (status) {
-      case "pending":
-        return "Applied";
-      case "offered":
-        return "Offer";
-      case "accepted":
-        return "Accepted";
-      case "rejected":
-        return "Rejected";
-      default:
-        return "Applied";
-    }
-  }
 
   function editJob(job: Job) {
-    // Update in openJobs if it exists there
-    const openJobIndex = openJobs.findIndex((j) => j.id === job.id);
-    if (openJobIndex !== -1) {
-      setOpenJobs(openJobs.map((j) => (j.id === job.id ? job : j)));
+    const jobIndex = jobs.findIndex((j) => j.id === job.id);
+    if (jobIndex !== -1) {
+      setJobs(jobs.map((j) => (j.id === job.id ? { ...j, ...job } : j)));
     }
   }
 
@@ -202,9 +130,9 @@ const Applicant = () => {
               onStatusChange={setSelectedStatus}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CompanyNameFilter
-                value={companyNameFilter}
-                onChange={setCompanyNameFilter}
+              <SearchFilter
+                value={searchFilter}
+                onChange={setSearchFilter}
               />
               <SkillsFilter
                 availableSkills={allSkills}
@@ -215,12 +143,21 @@ const Applicant = () => {
           </div>
 
           <div className="flex-1 shadow-md rounded-lg p-4">
-            {filteredJobs.length === 0 ? (
+            {jobsLoading ? (
+              <div className="text-center text-gray-500">Loading jobs...</div>
+            ) : jobs.length === 0 ? (
               <div className="text-center text-gray-500">No jobs found</div>
             ) : (
-              filteredJobs.map((job) => (
-                <JobCard key={job.id} job={job} editJob={editJob} />
-              ))
+              <>
+                {jobs.map((job) => (
+                  <JobCard key={job.id} job={job} editJob={editJob} />
+                ))}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </>
             )}
           </div>
         </div>

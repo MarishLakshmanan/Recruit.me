@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Role } from "schema/schema";
 import Applicant from "./variation/Applicant";
 import Company from "./variation/Company";
+import Admin from "./variation/Admin";
 import Container from "universal/Container";
 
 const Dashboard = () => {
@@ -24,7 +25,14 @@ const Dashboard = () => {
   if (userRole === Role.COMPANY) {
     return (
       <Container>
-        <Company />;
+        <Company />
+      </Container>
+    );
+  }
+  if (userRole === Role.ADMIN) {
+    return (
+      <Container>
+        <Admin />
       </Container>
     );
   }

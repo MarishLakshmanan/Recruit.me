@@ -27,7 +27,9 @@ export type ApplicantProfile = {
 export type CompanyProfile = {
   id: string;
   name: string;
+  email: string;
   jobs: Job[];
+  total: number;
 };
 
 export type CreateJob = {
@@ -44,6 +46,7 @@ export type Job = {
   post_date: string;
   status: string;
   skills?: string[];
+  company_name?: string;
 };
 
 export type SearchJobsResponse = {
@@ -62,4 +65,42 @@ export type JobDetail = Job & {
   description?: string;
   salary?: number;
   applicationStatus?: ApplicationStatus;
+};
+
+export type CompanyReport = {
+  id: string;
+  name: string;
+  job_count: number;
+  application_count: number;
+  hired_count: number;
+};
+
+export type JobReport = {
+  id: string;
+  title: string;
+  status: 'open' | 'closed' | 'draft';
+  applicant_count: number;
+  hired_count: number;
+};
+
+export type ApplicantReport = {
+  id: string;
+  name: string;
+  application_count: number;
+  skills: string[];
+};
+
+export type CompaniesReportResponse = {
+  companies: CompanyReport[];
+  total: number;
+};
+
+export type JobsReportResponse = {
+  jobs: JobReport[];
+  total: number;
+};
+
+export type ApplicantsReportResponse = {
+  applicants: ApplicantReport[];
+  total: number;
 };

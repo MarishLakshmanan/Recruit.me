@@ -177,28 +177,43 @@ export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
 };
 
 export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
+  const [user, error] = verifyTokenAndRole(event, ["applicant"]);
+  if (error) return UNAUTHORIZED;
+
   const skill = event.queryStringParameters?.skill;
-  const company = event.queryStringParameters?.company;
+  const search = event.queryStringParameters?.search;
+  const status = event.queryStringParameters?.status;
   const offset = parseInt(event.queryStringParameters?.offset || "0");
   const limit = parseInt(event.queryStringParameters?.limit || "20");
 
   const client = await getDbClient();
   try {
     let query = `
-      SELECT 
+      SELECT
         j.id,
         j.title,
         u.name as company_name,
         j.description,
         j.post_date,
-        ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
+        j.salary,
+        COUNT(DISTINCT apps_count.id) as applicant_count,
+        ARRAY_AGG(DISTINCT js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills,
+        CASE
+          WHEN user_app.id IS NULL THEN 'Open'
+          WHEN user_app.offer_status = 'rejected' THEN 'Rejected'
+          WHEN user_app.offer_status = 'offered' THEN 'Offer'
+          WHEN user_app.offer_status = 'accepted' THEN 'Accepted'
+          ELSE 'Applied'
+        END as application_status
       FROM jobs j
       JOIN users u ON j.company_id = u.id
       LEFT JOIN job_skills js ON j.id = js.job_id
+      LEFT JOIN applications apps_count ON j.id = apps_count.job_id
+      LEFT JOIN applications user_app ON j.id = user_app.job_id AND user_app.applicant_id = $1
       WHERE j.status = 'open'
     `;
-    const params: any[] = [];
-    let paramIndex = 1;
+    const params: any[] = [user!.userId];
+    let paramIndex = 2;
 
     if (skill) {
       query += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${paramIndex})`;
@@ -206,23 +221,42 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
       paramIndex++;
     }
 
-    if (company) {
-      query += ` AND u.name ILIKE $${paramIndex}`;
-      params.push(`%${company}%`);
+    if (search) {
+      query += ` AND (u.name ILIKE $${paramIndex} OR j.title ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
       paramIndex++;
     }
 
-    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date LIMIT $${paramIndex} OFFSET $${
-      paramIndex + 1
-    }`;
+    if (status && status !== 'All') {
+      if (status === 'Open') {
+        query += ` AND user_app.id IS NULL`;
+      } else if (status === 'Applied') {
+        query += ` AND user_app.id IS NOT NULL AND (user_app.offer_status IS NULL OR user_app.offer_status = 'none')`;
+      } else if (status === 'Offer') {
+        query += ` AND user_app.offer_status = 'offered'`;
+      } else if (status === 'Accepted') {
+        query += ` AND user_app.offer_status = 'accepted'`;
+      } else if (status === 'Rejected') {
+        query += ` AND user_app.offer_status = 'rejected'`;
+      }
+    }
+
+    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date, j.salary, user_app.id, user_app.offer_status
+               ORDER BY j.post_date DESC
+               LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const result = await client.query(query, params);
 
-    let countQuery =
-      "SELECT COUNT(DISTINCT j.id) FROM jobs j JOIN users u ON j.company_id = u.id WHERE j.status = 'open'";
-    const countParams: any[] = [];
-    let countParamIndex = 1;
+    let countQuery = `
+      SELECT COUNT(DISTINCT j.id)
+      FROM jobs j
+      JOIN users u ON j.company_id = u.id
+      LEFT JOIN applications user_app ON j.id = user_app.job_id AND user_app.applicant_id = $1
+      WHERE j.status = 'open'
+    `;
+    const countParams: any[] = [user!.userId];
+    let countParamIndex = 2;
 
     if (skill) {
       countQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${countParamIndex})`;
@@ -230,9 +264,24 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
       countParamIndex++;
     }
 
-    if (company) {
-      countQuery += ` AND u.name ILIKE $${countParamIndex}`;
-      countParams.push(`%${company}%`);
+    if (search) {
+      countQuery += ` AND (u.name ILIKE $${countParamIndex} OR j.title ILIKE $${countParamIndex})`;
+      countParams.push(`%${search}%`);
+      countParamIndex++;
+    }
+
+    if (status && status !== 'All') {
+      if (status === 'Open') {
+        countQuery += ` AND user_app.id IS NULL`;
+      } else if (status === 'Applied') {
+        countQuery += ` AND user_app.id IS NOT NULL AND (user_app.offer_status IS NULL OR user_app.offer_status = 'none')`;
+      } else if (status === 'Offer') {
+        countQuery += ` AND user_app.offer_status = 'offered'`;
+      } else if (status === 'Accepted') {
+        countQuery += ` AND user_app.offer_status = 'accepted'`;
+      } else if (status === 'Rejected') {
+        countQuery += ` AND user_app.offer_status = 'rejected'`;
+      }
     }
 
     const countResult = await client.query(countQuery, countParams);

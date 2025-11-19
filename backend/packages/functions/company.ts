@@ -7,6 +7,11 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
   const [user, error] = verifyTokenAndRole(event, ["company"]);
   if (error) return UNAUTHORIZED;
 
+  const status = event.queryStringParameters?.status;
+  const skills = event.queryStringParameters?.skills;
+  const offset = parseInt(event.queryStringParameters?.offset || "0");
+  const limit = parseInt(event.queryStringParameters?.limit || "20");
+
   const client = await getDbClient();
   try {
     const userResult = await client.query(
@@ -14,28 +19,79 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
       [user!.userId]
     );
 
-    const jobsResult = await client.query(
-      `SELECT
+    let jobsQuery = `
+      SELECT
         j.id,
         j.title,
         j.post_date,
         j.status,
+        j.description,
+        j.salary,
         COUNT(DISTINCT a.id) as applicant_count,
         COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count,
-        ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
+        ARRAY_AGG(DISTINCT js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
       FROM jobs j
       LEFT JOIN applications a ON j.id = a.job_id
       LEFT JOIN job_skills js ON j.id = js.job_id
       WHERE j.company_id = $1
-      GROUP BY j.id, j.title, j.post_date, j.status`,
-      [user!.userId]
-    );
+    `;
+    const params: any[] = [user!.userId];
+    let paramIndex = 2;
+
+    if (status && status !== 'All') {
+      if (status === 'Open') {
+        jobsQuery += ` AND j.status = 'open'`;
+      } else if (status === 'Closed') {
+        jobsQuery += ` AND j.status = 'closed'`;
+      } else if (status === 'Draft') {
+        jobsQuery += ` AND j.status = 'draft'`;
+      }
+    }
+
+    if (skills) {
+      jobsQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${paramIndex})`;
+      params.push(`%${skills}%`);
+      paramIndex++;
+    }
+
+    jobsQuery += ` GROUP BY j.id, j.title, j.post_date, j.status, j.description, j.salary
+                  ORDER BY j.post_date DESC
+                  LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const jobsResult = await client.query(jobsQuery, params);
+
+    let countQuery = `
+      SELECT COUNT(DISTINCT j.id)
+      FROM jobs j
+      WHERE j.company_id = $1
+    `;
+    const countParams: any[] = [user!.userId];
+    let countParamIndex = 2;
+
+    if (status && status !== 'All') {
+      if (status === 'Open') {
+        countQuery += ` AND j.status = 'open'`;
+      } else if (status === 'Closed') {
+        countQuery += ` AND j.status = 'closed'`;
+      } else if (status === 'Draft') {
+        countQuery += ` AND j.status = 'draft'`;
+      }
+    }
+
+    if (skills) {
+      countQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${countParamIndex})`;
+      countParams.push(`%${skills}%`);
+    }
+
+    const countResult = await client.query(countQuery, countParams);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         ...userResult.rows[0],
         jobs: jobsResult.rows,
+        total: parseInt(countResult.rows[0].count),
       }),
     };
   } finally {

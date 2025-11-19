@@ -27,7 +27,9 @@ export type ApplicantProfile = {
 export type CompanyProfile = {
   id: string;
   name: string;
+  email: string;
   jobs: Job[];
+  total: number;
 };
 
 export type CreateJob = {

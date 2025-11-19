@@ -46,6 +46,7 @@ export type Job = {
   post_date: string;
   status: string;
   skills?: string[];
+  company_name?: string;
 };
 
 export type SearchJobsResponse = {

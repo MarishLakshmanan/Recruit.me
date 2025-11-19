@@ -92,6 +92,7 @@ const JobCard = ({
         >
           <div>
             <h3>{job.title}</h3>
+            {job.company_name && <p className="text-gray-600 font-medium">{job.company_name}</p>}
             <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
             {job.skills?.map((skill) => (
               <span

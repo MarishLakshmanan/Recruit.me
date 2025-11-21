@@ -4,9 +4,11 @@ import React from "react";
 const Modal = ({
   children,
   onClose,
+  className,
 }: {
   children: React.ReactNode;
   onClose?: () => void;
+  className?: string;
 }) => {
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Close modal if clicking directly on the backdrop
@@ -21,7 +23,7 @@ const Modal = ({
       onClick={handleBackdropClick}
     >
       <div
-        className="w-[480px] rounded-2xl bg-white shadow-xl relative"
+        className={`${className || 'w-[480px]'} rounded-2xl bg-white shadow-xl relative`}
         onClick={(e) => {
           // Prevent clicks inside modal from closing it
           e.stopPropagation();

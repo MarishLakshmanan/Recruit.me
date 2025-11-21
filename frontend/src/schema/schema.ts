@@ -104,3 +104,16 @@ export type ApplicantsReportResponse = {
   applicants: ApplicantReport[];
   total: number;
 };
+
+export type ApplicantForJob = {
+  id: string;
+  name: string;
+  rating: 'hirable' | 'wait' | 'unacceptable' | 'unrated';
+  offer_status: 'none' | 'offered' | 'accepted' | 'rejected';
+  skills: string[];
+};
+
+export type ApplicantsForJobResponse = {
+  applicants: ApplicantForJob[];
+  total: number;
+};

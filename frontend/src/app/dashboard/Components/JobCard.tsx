@@ -4,6 +4,7 @@ import { FetchPayload, Job, Role } from "schema/schema";
 import Button from "universal/Button";
 import Modal from "universal/Modal";
 import EditJobForm from "./EditJobForm";
+import ApplicantsList from "./ApplicantsList";
 import Link from "next/link";
 
 const JobCard = ({
@@ -15,6 +16,7 @@ const JobCard = ({
 }) => {
   const [role, setRole] = useState<Role>(Role.COMPANY);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isApplicantsModalOpen, setIsApplicantsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -64,7 +66,14 @@ const JobCard = ({
             <Button label="Activate" type="primary" onClick={handleActivate} />
           )}
           {job.status === "open" && (
-            <Button label="Close" type="primary" onClick={handleClose} />
+            <>
+              <Button label="Close" type="primary" onClick={handleClose} />
+              <Button
+                label="View Applicants"
+                type="secondary"
+                onClick={() => setIsApplicantsModalOpen(true)}
+              />
+            </>
           )}
           <Button
             label="Edit"
@@ -127,9 +136,18 @@ const JobCard = ({
             ))}
           </div>
           <div>
-            <div>
-              applicants:<span>{job.applicant_count}</span>
-            </div>
+            {job.status === "open" ? (
+              <button
+                onClick={() => setIsApplicantsModalOpen(true)}
+                className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+              >
+                applicants: <span className="font-semibold">{job.applicant_count}</span>
+              </button>
+            ) : (
+              <div>
+                applicants:<span>{job.applicant_count}</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2 items-center">
             <div>{actions()}</div>
@@ -148,6 +166,14 @@ const JobCard = ({
             }}
           />
         </Modal>
+      )}
+
+      {isApplicantsModalOpen && (
+        <ApplicantsList
+          jobId={job.id}
+          jobTitle={job.title}
+          onClose={() => setIsApplicantsModalOpen(false)}
+        />
       )}
     </div>
   );

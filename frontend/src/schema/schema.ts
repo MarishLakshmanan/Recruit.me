@@ -123,6 +123,7 @@ export type ApplicantForJob = {
   rating: 'hirable' | 'wait' | 'unacceptable' | 'unrated';
   offer_status: 'none' | 'offered' | 'accepted' | 'rejected';
   skills: string[];
+  apply_date?: string;
 };
 
 export type ApplicantsForJobResponse = {

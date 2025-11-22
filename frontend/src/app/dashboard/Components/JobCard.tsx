@@ -93,7 +93,7 @@ const JobCard = ({
   };
 
   return (
-    <div className="border-b p-4 border-gray-300 flex justify-between items-center">
+    <div className={`border-b p-4 border-gray-300 ${role === Role.APPLICANT ? 'flex justify-between items-center' : 'grid grid-cols-3 items-center gap-4'}`}>
       {role === Role.APPLICANT ? (
         <Link
           href={`/job/${job.id}`}
@@ -124,7 +124,12 @@ const JobCard = ({
       ) : (
         <>
           <div>
-            <h3>{job.title}</h3>
+            <Link
+              href={`/job/${job.id}`}
+              className="cursor-pointer hover:text-blue-600"
+            >
+              <h3 className="font-semibold inline-block">{job.title}</h3>
+            </Link>
             <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
             {job.skills?.map((skill) => (
               <span
@@ -135,7 +140,7 @@ const JobCard = ({
               </span>
             ))}
           </div>
-          <div>
+          <div className="flex items-center justify-center">
             {job.status === "open" ? (
               <button
                 onClick={() => setIsApplicantsModalOpen(true)}
@@ -149,7 +154,7 @@ const JobCard = ({
               </div>
             )}
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center justify-end">
             <div>{actions()}</div>
           </div>
         </>

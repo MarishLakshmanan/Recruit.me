@@ -341,12 +341,13 @@ export const getApplicants: APIGatewayProxyHandlerV2 = async (event) => {
         u.name,
         a.rating,
         a.offer_status,
+        a.apply_date,
         ARRAY_AGG(s.skill) FILTER (WHERE s.skill IS NOT NULL) as skills
       FROM applications a
       JOIN users u ON a.applicant_id = u.id
       LEFT JOIN applicant_skills s ON u.id = s.applicant_id
       WHERE a.job_id = $1
-      GROUP BY u.id, u.name, a.rating, a.offer_status
+      GROUP BY u.id, u.name, a.rating, a.offer_status, a.apply_date
       LIMIT $2 OFFSET $3`,
       [jobId, limit, offset]
     );

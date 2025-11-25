@@ -8,6 +8,7 @@ export type AuthPayload = {
 export type LoginData = {
   email: string;
   password: string;
+  role?: Role;
 };
 
 export type RegisterData = {

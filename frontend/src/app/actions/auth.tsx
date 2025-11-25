@@ -5,38 +5,80 @@ import { cookies } from "next/headers";
 import { AuthPayload, LoginData, RegisterData } from "schema/auth";
 
 export async function registerAction(data: RegisterData) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error);
-  }
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/register`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
-  return response.json();
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Failed to parse error response" }));
+      throw new Error(
+        errorData.error || `Registration failed with status ${response.status}`
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("An unexpected error occurred during registration");
+  }
 }
 
 export async function loginAction(data: LoginData) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error);
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Failed to parse error response" }));
+      throw new Error(
+        errorData.error || `Login failed with status ${response.status}`
+      );
+    }
+
+    const payload: AuthPayload = await response.json();
+
+    // Quick fix: Validate role on frontend before setting cookie
+    if (data.role && payload.role.toLowerCase() !== data.role.toLowerCase()) {
+      throw new Error(
+        `This account is registered as ${payload.role}. Please select the correct account type and try again.`
+      );
+    }
+
+    const cookieStore = await cookies();
+
+    cookieStore.set("token", JSON.stringify(payload), {
+      path: "/",
+      name: "token",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+    });
+
+    return { success: true, role: payload.role };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("An unexpected error occurred during login");
   }
-  const payload: AuthPayload = await response.json();
-  const cookieStore = await cookies();
-
-  cookieStore.set("token", JSON.stringify(payload), {
-    path: "/",
-    name: "token",
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24,
-  });
-
-  return { success: true };
 }

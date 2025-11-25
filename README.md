@@ -63,4 +63,23 @@ Built with Next.js and AWS.
 
 - Register Account
 - Edit Profile
-- Search Job – Browse and search available job posts. - Partially works without search function(Only listing is available)
+- Search Job
+
+### Completed Use cases on Iteration 1
+
+##### Company
+
+- Review Company Profile
+- Review Applicant
+
+##### Applicant
+
+- Review Profile
+- Apply to Job
+- Withdraw from Job
+
+##### Admin
+
+- Report Companies
+- Report Applicants
+- Report Jobs for Company

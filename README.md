@@ -65,7 +65,7 @@ Built with Next.js and AWS.
 - Edit Profile
 - Search Job
 
-### Completed Use cases on Iteration 1
+### Completed Use cases on Iteration 2
 
 ##### Company
 

@@ -18,7 +18,11 @@ function generateUUID(): string {
 export const login: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
-    const { email, password } = JSON.parse(event.body || "{}");
+    const { email, password, role } = JSON.parse(event.body || "{}");
+
+    if (!email || !password) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Email and password are required" }) };
+    }
 
     const result = await client.query(
       "SELECT id, email, password_hash, salt, type FROM users WHERE email = $1",
@@ -26,14 +30,24 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
     );
 
     if (result.rows.length === 0) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Invalid credentials" }) };
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid email or password" }) };
     }
 
     const user = result.rows[0];
     const hash = hashPassword(password, user.salt);
 
     if (hash !== user.password_hash) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Invalid credentials" }) };
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid email or password" }) };
+    }
+
+    // Validate role if provided (case-insensitive comparison)
+    if (role && user.type.toLowerCase() !== role.toLowerCase()) {
+      return { 
+        statusCode: 403, 
+        body: JSON.stringify({ 
+          error: `This account is registered as ${user.type}. Please select the correct account type and try again.` 
+        }) 
+      };
     }
 
     const token = jwt.sign(
@@ -45,6 +59,11 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({ token, role: user.type }),
+    };
+  } catch (error: any) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "An error occurred during login. Please try again." }),
     };
   } finally {
     await client.end();

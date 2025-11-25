@@ -1,5 +1,6 @@
 import { fetchWithAuth } from "app/actions/fetch";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CompanyProfile, FetchPayload, Job } from "schema/schema";
 import CompanyHeader from "../Components/CompanyHeader";
 import StatusFilter from "../Components/StatusFilter";
@@ -8,16 +9,123 @@ import Pagination from "../Components/Pagination";
 import JobCard from "../Components/JobCard";
 
 const Company = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [jobsLoading, setJobsLoading] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>("All");
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize state from URL params
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(
+    searchParams.get("status") || "All"
+  );
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(() => {
+    const skillsParam = searchParams.get("skills");
+    return skillsParam ? skillsParam.split(",").filter(Boolean) : [];
+  });
+  const [currentPage, setCurrentPage] = useState(() => {
+    const pageParam = searchParams.get("page");
+    return pageParam ? parseInt(pageParam, 10) : 1;
+  });
+
   const [allSkills, setAllSkills] = useState<string[]>([]);
   const pageSize = 10;
-
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const isUpdatingUrlRef = useRef(false);
+  const isPageChangeRef = useRef(false);
+
+  // Track previous filter values to detect changes and reset page
+  const prevFiltersRef = useRef({
+    status: selectedStatus,
+    skills: selectedSkills.join(","),
+  });
+
+  // Reset page to 1 when filters change (except when page is intentionally changed)
+  useEffect(() => {
+    if (isPageChangeRef.current) {
+      isPageChangeRef.current = false;
+      return;
+    }
+
+    const filtersChanged =
+      prevFiltersRef.current.status !== selectedStatus ||
+      prevFiltersRef.current.skills !== selectedSkills.join(",");
+
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+
+    prevFiltersRef.current = {
+      status: selectedStatus,
+      skills: selectedSkills.join(","),
+    };
+  }, [selectedStatus, selectedSkills, currentPage]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (selectedStatus && selectedStatus !== "All") {
+      params.set("status", selectedStatus);
+    }
+    if (selectedSkills.length > 0) {
+      params.set("skills", selectedSkills.join(","));
+    }
+    if (currentPage > 1) {
+      params.set("page", currentPage.toString());
+    }
+
+    const newSearch = params.toString();
+    const currentSearch = searchParams.toString();
+
+    // Only update if URL actually changed
+    if (newSearch !== currentSearch) {
+      isUpdatingUrlRef.current = true;
+      const newUrl = newSearch
+        ? `${window.location.pathname}?${newSearch}`
+        : window.location.pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [selectedStatus, selectedSkills, currentPage, router, searchParams]);
+
+  // Sync state from URL when URL changes (browser back/forward)
+  useEffect(() => {
+    if (isUpdatingUrlRef.current) {
+      isUpdatingUrlRef.current = false;
+      return;
+    }
+
+    const statusParam = searchParams.get("status");
+    const skillsParam = searchParams.get("skills");
+    const pageParam = searchParams.get("page");
+
+    if (statusParam && statusParam !== selectedStatus) {
+      setSelectedStatus(statusParam);
+    } else if (!statusParam && selectedStatus !== "All") {
+      setSelectedStatus("All");
+    }
+
+    if (skillsParam) {
+      const skillsArray = skillsParam.split(",").filter(Boolean);
+      if (skillsArray.join(",") !== selectedSkills.join(",")) {
+        setSelectedSkills(skillsArray);
+      }
+    } else if (selectedSkills.length > 0) {
+      setSelectedSkills([]);
+    }
+
+    if (pageParam) {
+      const page = parseInt(pageParam, 10);
+      if (page !== currentPage && page > 0) {
+        isPageChangeRef.current = true;
+        setCurrentPage(page);
+      }
+    } else if (currentPage !== 1) {
+      isPageChangeRef.current = true;
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,18 +136,19 @@ const Company = () => {
       }
 
       try {
-        const searchParams = new URLSearchParams();
+        const apiParams = new URLSearchParams();
         if (selectedStatus && selectedStatus !== "All") {
-          searchParams.append("status", selectedStatus);
+          apiParams.append("status", selectedStatus);
         }
         if (selectedSkills.length > 0) {
-          searchParams.append("skills", selectedSkills[0]);
+          // Backend supports single skill filter, use first selected skill
+          apiParams.append("skills", selectedSkills[0]);
         }
-        searchParams.append("offset", ((currentPage - 1) * pageSize).toString());
-        searchParams.append("limit", pageSize.toString());
+        apiParams.append("offset", ((currentPage - 1) * pageSize).toString());
+        apiParams.append("limit", pageSize.toString());
 
         const payload: FetchPayload = {
-          url: `${baseUrl}/company/profile?${searchParams.toString()}`,
+          url: `${baseUrl}/company/profile?${apiParams.toString()}`,
           options: {
             method: "GET",
           },
@@ -53,7 +162,7 @@ const Company = () => {
         });
         setAllSkills(Array.from(skillsSet).sort());
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
+        console.error("Failed to fetch profile:", error);
       } finally {
         setIsLoading(false);
         setJobsLoading(false);
@@ -61,11 +170,13 @@ const Company = () => {
     };
 
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStatus, selectedSkills, currentPage, pageSize, baseUrl]);
 
   const totalPages = profile ? Math.ceil(profile.total / pageSize) : 0;
 
   const handlePageChange = (page: number) => {
+    isPageChangeRef.current = true;
     setCurrentPage(page);
   };
 
@@ -74,7 +185,7 @@ const Company = () => {
       setProfile({
         ...profile,
         jobs: [...profile.jobs, job],
-        total: profile.total + 1
+        total: profile.total + 1,
       });
     }
   }

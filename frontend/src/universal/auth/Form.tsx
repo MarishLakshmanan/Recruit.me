@@ -35,12 +35,13 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           type: activeTab,
         };
         await registerAction(formData);
-        alert("Registration successful");
+        alert("Registration successful! You can now log in.");
         router.push("/login");
       } else {
         const formData: LoginData = {
           email,
           password,
+          role: activeTab,
         };
         const response = await loginAction(formData);
         if (response.success) {
@@ -52,7 +53,11 @@ const Form = ({ type }: { type: "register" | "login" }) => {
       }
     } catch (error) {
       console.error(error);
-      alert(error as string);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
+      alert(errorMessage);
     }
   };
 

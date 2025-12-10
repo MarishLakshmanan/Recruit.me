@@ -12,7 +12,7 @@ const JobCard = ({
   job,
   editJob,
 }: {
-  job: Job;
+  job: Job & { application_status?: string };
   editJob: (job: Job) => void;
 }) => {
   const router = useRouter();
@@ -93,6 +93,15 @@ const JobCard = ({
       );
     }
     if (role === Role.APPLICANT) {
+      if (job.application_status) {
+        return (
+          <div className="flex gap-2">
+            <span className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium">
+              Status: {job.application_status}
+            </span>
+          </div>
+        );
+      }
       return (
         <div className="flex gap-2">
           <Button label="Apply" type="primary" onClick={() => {}} />

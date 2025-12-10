@@ -64,6 +64,10 @@ const Applicant = () => {
     setCurrentPage(page);
   };
 
+  const handleStatusChange = (status: string | null) => {
+    setSelectedStatus(status || "All");
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -112,7 +116,7 @@ const Applicant = () => {
           <StatusFilter
             statuses={["All", "Pending", "Offered", "Accepted", "Rejected"]}
             selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
+            onStatusChange={handleStatusChange}
           />
         </div>
 

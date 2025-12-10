@@ -6,7 +6,7 @@ import SearchFilter from "app/dashboard/Components/SearchFilter";
 import SkillsFilter from "app/dashboard/Components/SkillsFilter";
 import Pagination from "app/dashboard/Components/Pagination";
 import JobCard from "app/dashboard/Components/JobCard";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   FetchPayload,
@@ -19,7 +19,7 @@ type JobWithStatus = Job & {
   company_name: string;
 };
 
-export default function JobSearch() {
+function JobSearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<JobWithStatus[]>([]);
@@ -290,5 +290,19 @@ export default function JobSearch() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function JobSearch() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <h1 className="text-2xl">Loading...</h1>
+        </div>
+      }
+    >
+      <JobSearchContent />
+    </Suspense>
   );
 }

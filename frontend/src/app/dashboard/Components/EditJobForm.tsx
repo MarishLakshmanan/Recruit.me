@@ -81,7 +81,10 @@ export default function EditJobForm({
     if (draftSkill.trim()) addSkill();
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (skills.length === 0) {
       setError("Please add at least one skill");
       return;
@@ -89,9 +92,10 @@ export default function EditJobForm({
     setIsPending(true);
     setError(null);
 
+    const trimmedDescription = description.trim();
     const updateJob: CreateJob = {
       title: title.trim(),
-      description: description.trim(),
+      ...(trimmedDescription ? { description: trimmedDescription } : {}),
       salary: salary ? parseFloat(salary.trim()) : 0,
       skills: skills.map((s) => s.trim()),
     };
@@ -115,7 +119,7 @@ export default function EditJobForm({
         applicant_count: existingJob?.applicant_count || 0,
         hired_count: existingJob?.hired_count || 0,
         post_date: existingJob?.post_date || new Date().toISOString(),
-        status: existingJob?.status || "draft",
+        status: existingJob?.status || "inactive",
       };
       editJob(updatedJob);
     } catch (error) {
@@ -135,7 +139,7 @@ export default function EditJobForm({
 
   return (
     <form
-      action={onSubmit}
+      onSubmit={onSubmit}
       className="space-y-5 rounded-xl bg-white p-6 shadow"
     >
       <h2 className="text-lg font-semibold">Edit Job</h2>
@@ -217,9 +221,8 @@ export default function EditJobForm({
         <textarea
           rows={3}
           value={description}
-          required
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Brief summary of responsibilities, requirements, etc."
+          placeholder="Brief summary of responsibilities, requirements, etc. (Optional)"
           className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
         />
       </div>

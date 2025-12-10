@@ -11,9 +11,9 @@ export const runSchema: APIGatewayProxyHandlerV2 = async () => {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
   });
-  
+
   await client.connect();
-  
+
   try {
     const schema = `
 CREATE TABLE users (
@@ -32,7 +32,7 @@ CREATE TABLE jobs (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     salary DECIMAL(10, 2),
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'open', 'closed')),
+    status VARCHAR(20) DEFAULT 'inactive' CHECK (status IN ('inactive', 'open', 'closed')),
     post_date TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES users(id) ON DELETE CASCADE
@@ -65,9 +65,9 @@ CREATE TABLE job_skills (
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
 );
     `;
-    
+
     await client.query(schema);
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Schema created successfully" }),

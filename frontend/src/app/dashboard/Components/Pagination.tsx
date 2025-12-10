@@ -44,7 +44,8 @@ const Pagination = ({
     return visiblePages;
   };
 
-  if (totalPages <= 1) return null;
+  // Always show pagination, even if there's only one page
+  if (totalPages < 1) return null;
 
   const visiblePages = getVisiblePages();
 
@@ -53,10 +54,11 @@ const Pagination = ({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === 1
+        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          currentPage === 1
             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
+        }`}
       >
         Previous
       </button>
@@ -78,10 +80,11 @@ const Pagination = ({
           <button
             key={pageNumber}
             onClick={() => onPageChange(pageNumber)}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === pageNumber
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              currentPage === pageNumber
                 ? "bg-primary text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
+            }`}
           >
             {pageNumber}
           </button>
@@ -91,10 +94,11 @@ const Pagination = ({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === totalPages
+        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          currentPage === totalPages
             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
+        }`}
       >
         Next
       </button>

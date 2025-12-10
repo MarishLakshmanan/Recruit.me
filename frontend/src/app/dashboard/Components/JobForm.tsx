@@ -47,15 +47,23 @@ export default function AddJobForm({
     if (draftSkill.trim()) addSkill();
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     if (skills.length === 0) {
       setError("Please add at least one skill");
       return;
     }
 
+    setIsPending(true);
+    setError(null);
+
+    const trimmedDescription = description.trim();
     const createJob: CreateJob = {
       title: title.trim(),
-      description: description.trim(),
+      ...(trimmedDescription ? { description: trimmedDescription } : {}),
       salary: parseFloat(salary.trim()),
       skills: skills.map((s) => s.trim()),
     };
@@ -63,6 +71,9 @@ export default function AddJobForm({
       url: `${process.env.NEXT_PUBLIC_API_URL}/company/job`,
       options: {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(createJob),
       },
     };
@@ -76,18 +87,22 @@ export default function AddJobForm({
         applicant_count: 0,
         hired_count: 0,
         post_date: new Date().toISOString(),
-        status: "draft",
+        status: "inactive",
       };
       addJob(job);
     } catch (error) {
-      alert(error as string);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsPending(false);
     }
-    setIsPending(false);
   };
 
   return (
     <form
-      action={onSubmit}
+      onSubmit={onSubmit}
       className="space-y-5 rounded-xl bg-white p-6 shadow"
     >
       {/* Job title */}
@@ -167,9 +182,8 @@ export default function AddJobForm({
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Brief summary of responsibilities, requirements, etc."
+          placeholder="Brief summary of responsibilities, requirements, etc. (Optional)"
           className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
-          required
         />
       </div>
 

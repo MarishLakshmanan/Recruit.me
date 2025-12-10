@@ -14,7 +14,7 @@ CREATE TABLE jobs (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     salary DECIMAL(10, 2),
-    status ENUM('draft', 'open', 'closed') DEFAULT 'draft',
+    status ENUM('inactive', 'open', 'closed') DEFAULT 'inactive',
     post_date TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES users(id) ON DELETE CASCADE

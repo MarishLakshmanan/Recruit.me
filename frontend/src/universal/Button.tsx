@@ -4,10 +4,12 @@ const Button = ({
   label,
   onClick,
   type,
+  disabled = false,
 }: {
   label: string;
   onClick?: () => void;
   type: ButtonType;
+  disabled?: boolean;
 }) => {
   const typeClasses: Record<ButtonType, string> = {
     primary: "bg-primary hover:opacity-90",
@@ -21,8 +23,11 @@ const Button = ({
 
   return (
     <button
-      className={`px-4 py-2 rounded-md ${typeClasses[type]} w-full text-white cursor-pointer`}
+      className={`px-4 py-2 rounded-md ${typeClasses[type]} w-full text-white ${
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+      }`}
       onClick={onClick}
+      disabled={disabled}
     >
       {label}
     </button>

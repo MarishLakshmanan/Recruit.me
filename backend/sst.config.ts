@@ -39,40 +39,142 @@ export default $config({
       },
     };
 
-    api.route("POST /setup/schema", { handler: "packages/functions/setup.runSchema", ...cfg });
+    api.route("POST /setup/schema", {
+      handler: "packages/functions/setup.runSchema",
+      ...cfg,
+    });
 
-    api.route("POST /login", { handler: "packages/functions/auth.login", ...cfg });
-    api.route("POST /logout", { handler: "packages/functions/auth.logout", ...cfg });
-    api.route("POST /register", { handler: "packages/functions/auth.register", ...cfg });
+    api.route("POST /login", {
+      handler: "packages/functions/auth.login",
+      ...cfg,
+    });
+    api.route("POST /logout", {
+      handler: "packages/functions/auth.logout",
+      ...cfg,
+    });
+    api.route("POST /register", {
+      handler: "packages/functions/auth.register",
+      ...cfg,
+    });
 
-    api.route("GET /company/profile", { handler: "packages/functions/company.getProfile", ...cfg });
-    api.route("PUT /company/profile", { handler: "packages/functions/company.updateProfile", ...cfg });
-    api.route("POST /company/job", { handler: "packages/functions/company.createJob", ...cfg });
-    api.route("GET /company/job/{jobId}", { handler: "packages/functions/company.getJob", ...cfg });
-    api.route("PUT /company/job/{jobId}", { handler: "packages/functions/company.updateJob", ...cfg });
-    api.route("POST /company/job/{jobId}/activate", { handler: "packages/functions/company.activateJob", ...cfg });
-    api.route("POST /company/job/{jobId}/close", { handler: "packages/functions/company.closeJob", ...cfg });
-    api.route("POST /company/job/{jobId}/reopen", { handler: "packages/functions/company.reopenJob", ...cfg });
-    api.route("GET /company/job/{jobId}/applicants", { handler: "packages/functions/company.getApplicants", ...cfg });
-    api.route("PUT /company/job/{jobId}/applicant/{applicantId}/rating", { handler: "packages/functions/company.rateApplicant", ...cfg });
-    api.route("POST /company/job/{jobId}/applicant/{applicantId}/offer", { handler: "packages/functions/company.extendOffer", ...cfg });
-    api.route("DELETE /company/job/{jobId}/applicant/{applicantId}/offer", { handler: "packages/functions/company.rescindOffer", ...cfg });
-    api.route("GET /company/applicants/search", { handler: "packages/functions/company.searchApplicants", ...cfg });
+    api.route("GET /company/profile", {
+      handler: "packages/functions/company.getProfile",
+      ...cfg,
+    });
+    api.route("PUT /company/profile", {
+      handler: "packages/functions/company.updateProfile",
+      ...cfg,
+    });
+    api.route("POST /company/job", {
+      handler: "packages/functions/company.createJob",
+      ...cfg,
+    });
+    api.route("GET /company/job/{jobId}", {
+      handler: "packages/functions/company.getJob",
+      ...cfg,
+    });
+    api.route("PUT /company/job/{jobId}", {
+      handler: "packages/functions/company.updateJob",
+      ...cfg,
+    });
+    api.route("POST /company/job/{jobId}/activate", {
+      handler: "packages/functions/company.activateJob",
+      ...cfg,
+    });
+    api.route("POST /company/job/{jobId}/close", {
+      handler: "packages/functions/company.closeJob",
+      ...cfg,
+    });
+    api.route("POST /company/job/{jobId}/reopen", {
+      handler: "packages/functions/company.reopenJob",
+      ...cfg,
+    });
+    api.route("GET /company/job/{jobId}/applicants", {
+      handler: "packages/functions/company.getApplicants",
+      ...cfg,
+    });
+    api.route("GET /company/job/{jobId}/applicants/hirable", {
+      handler: "packages/functions/company.getHirableApplicants",
+      ...cfg,
+    });
+    api.route("GET /company/job/{jobId}/applicants/by-offer-status", {
+      handler: "packages/functions/company.getApplicantsByOfferStatus",
+      ...cfg,
+    });
+    api.route("PUT /company/job/{jobId}/applicant/{applicantId}/rating", {
+      handler: "packages/functions/company.rateApplicant",
+      ...cfg,
+    });
+    api.route("POST /company/job/{jobId}/applicant/{applicantId}/offer", {
+      handler: "packages/functions/company.extendOffer",
+      ...cfg,
+    });
+    api.route("POST /company/job/{jobId}/applicants/offer", {
+      handler: "packages/functions/company.extendBulkOffers",
+      ...cfg,
+    });
+    api.route("DELETE /company/job/{jobId}/applicant/{applicantId}/offer", {
+      handler: "packages/functions/company.rescindOffer",
+      ...cfg,
+    });
+    api.route("GET /company/applicants/search", {
+      handler: "packages/functions/company.searchApplicants",
+      ...cfg,
+    });
 
-    api.route("GET /applicant/profile", { handler: "packages/functions/applicant.getProfile", ...cfg });
-    api.route("PUT /applicant/profile", { handler: "packages/functions/applicant.updateProfile", ...cfg });
-    api.route("GET /applicant/job/search", { handler: "packages/functions/applicant.searchJobs", ...cfg });
-    api.route("GET /applicant/job/{jobId}", { handler: "packages/functions/applicant.getJobDetail", ...cfg });
-    api.route("POST /applicant/job/{jobId}/apply", { handler: "packages/functions/applicant.apply", ...cfg });
-    api.route("DELETE /applicant/job/{jobId}/apply", { handler: "packages/functions/applicant.withdraw", ...cfg });
-    api.route("POST /applicant/job/{jobId}/offer/accept", { handler: "packages/functions/applicant.acceptOffer", ...cfg });
-    api.route("DELETE /applicant/job/{jobId}/offer/accept", { handler: "packages/functions/applicant.rescindAcceptance", ...cfg });
-    api.route("POST /applicant/job/{jobId}/offer/reject", { handler: "packages/functions/applicant.rejectOffer", ...cfg });
+    api.route("GET /applicant/profile", {
+      handler: "packages/functions/applicant.getProfile",
+      ...cfg,
+    });
+    api.route("PUT /applicant/profile", {
+      handler: "packages/functions/applicant.updateProfile",
+      ...cfg,
+    });
+    api.route("GET /applicant/job/search", {
+      handler: "packages/functions/applicant.searchJobs",
+      ...cfg,
+    });
+    api.route("GET /applicant/job/{jobId}", {
+      handler: "packages/functions/applicant.getJobDetail",
+      ...cfg,
+    });
+    api.route("POST /applicant/job/{jobId}/apply", {
+      handler: "packages/functions/applicant.apply",
+      ...cfg,
+    });
+    api.route("DELETE /applicant/job/{jobId}/apply", {
+      handler: "packages/functions/applicant.withdraw",
+      ...cfg,
+    });
+    api.route("POST /applicant/job/{jobId}/offer/accept", {
+      handler: "packages/functions/applicant.acceptOffer",
+      ...cfg,
+    });
+    api.route("DELETE /applicant/job/{jobId}/offer/accept", {
+      handler: "packages/functions/applicant.rescindAcceptance",
+      ...cfg,
+    });
+    api.route("POST /applicant/job/{jobId}/offer/reject", {
+      handler: "packages/functions/applicant.rejectOffer",
+      ...cfg,
+    });
 
-    api.route("GET /admin/companies", { handler: "packages/functions/admin.getCompanies", ...cfg });
-    api.route("GET /admin/jobs", { handler: "packages/functions/admin.getJobs", ...cfg });
-    api.route("GET /admin/company/{companyId}/jobs", { handler: "packages/functions/admin.getCompanyJobs", ...cfg });
-    api.route("GET /admin/applicants", { handler: "packages/functions/admin.getApplicants", ...cfg });
+    api.route("GET /admin/companies", {
+      handler: "packages/functions/admin.getCompanies",
+      ...cfg,
+    });
+    api.route("GET /admin/jobs", {
+      handler: "packages/functions/admin.getJobs",
+      ...cfg,
+    });
+    api.route("GET /admin/company/{companyId}/jobs", {
+      handler: "packages/functions/admin.getCompanyJobs",
+      ...cfg,
+    });
+    api.route("GET /admin/applicants", {
+      handler: "packages/functions/admin.getApplicants",
+      ...cfg,
+    });
 
     const frontend = new sst.aws.Nextjs("RecruitFrontend", {
       path: "../frontend",
@@ -89,7 +191,7 @@ export default $config({
         host: db.host,
         port: db.port,
         database: db.database,
-      }
+      },
     };
   },
 });

@@ -6,6 +6,7 @@ import Modal from "universal/Modal";
 import EditJobForm from "./EditJobForm";
 import ApplicantsList from "./ApplicantsList";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const JobCard = ({
   job,
@@ -14,6 +15,7 @@ const JobCard = ({
   job: Job;
   editJob: (job: Job) => void;
 }) => {
+  const router = useRouter();
   const [role, setRole] = useState<Role>(Role.COMPANY);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApplicantsModalOpen, setIsApplicantsModalOpen] = useState(false);
@@ -52,7 +54,7 @@ const JobCard = ({
       };
       await fetchWithAuth(payload);
       alert("Job closed successfully");
-      editJob({ ...job, status: "draft" });
+      editJob({ ...job, status: "inactive" });
     } catch (error) {
       alert(error as string);
     }
@@ -62,24 +64,31 @@ const JobCard = ({
     if (role === Role.COMPANY) {
       return (
         <div className="flex gap-2">
-          {job.status === "draft" && (
+          {job.status === "inactive" && (
             <Button label="Activate" type="primary" onClick={handleActivate} />
           )}
           {job.status === "open" && (
             <>
               <Button label="Close" type="primary" onClick={handleClose} />
               <Button
-                label="View Applicants"
+                label="Review Applicants"
                 type="secondary"
-                onClick={() => setIsApplicantsModalOpen(true)}
+                onClick={() => router.push(`/review/${job.id}`)}
+              />
+              <Button
+                label="Offer"
+                type="secondary"
+                onClick={() => router.push(`/offer/${job.id}`)}
               />
             </>
           )}
-          <Button
-            label="Edit"
-            type="primary"
-            onClick={() => setIsEditModalOpen(true)}
-          />
+          {job.status === "inactive" && (
+            <Button
+              label="Edit"
+              type="primary"
+              onClick={() => setIsEditModalOpen(true)}
+            />
+          )}
         </div>
       );
     }
@@ -93,7 +102,13 @@ const JobCard = ({
   };
 
   return (
-    <div className={`border-b p-4 border-gray-300 ${role === Role.APPLICANT ? 'flex justify-between items-center' : 'grid grid-cols-3 items-center gap-4'}`}>
+    <div
+      className={`border-b p-4 border-gray-300 ${
+        role === Role.APPLICANT
+          ? "flex justify-between items-center"
+          : "grid grid-cols-3 items-center gap-4"
+      }`}
+    >
       {role === Role.APPLICANT ? (
         <Link
           href={`/job/${job.id}`}
@@ -101,7 +116,9 @@ const JobCard = ({
         >
           <div>
             <h3>{job.title}</h3>
-            {job.company_name && <p className="text-gray-600 font-medium">{job.company_name}</p>}
+            {job.company_name && (
+              <p className="text-gray-600 font-medium">{job.company_name}</p>
+            )}
             <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
             {job.skills?.map((skill) => (
               <span
@@ -146,7 +163,8 @@ const JobCard = ({
                 onClick={() => setIsApplicantsModalOpen(true)}
                 className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
               >
-                applicants: <span className="font-semibold">{job.applicant_count}</span>
+                applicants:{" "}
+                <span className="font-semibold">{job.applicant_count}</span>
               </button>
             ) : (
               <div>

@@ -46,7 +46,7 @@ export type CompanyProfile = {
 
 export type CreateJob = {
   title: string;
-  description: string;
+  description?: string;
   salary: number;
   skills: string[];
 };
@@ -90,7 +90,7 @@ export type CompanyReport = {
 export type JobReport = {
   id: string;
   title: string;
-  status: 'open' | 'closed' | 'draft';
+  status: "open" | "closed" | "inactive";
   applicant_count: number;
   hired_count: number;
 };
@@ -120,8 +120,8 @@ export type ApplicantsReportResponse = {
 export type ApplicantForJob = {
   id: string;
   name: string;
-  rating: 'hirable' | 'wait' | 'unacceptable' | 'unrated';
-  offer_status: 'none' | 'offered' | 'accepted' | 'rejected';
+  rating: "hirable" | "wait" | "unacceptable" | "unrated";
+  offer_status: "none" | "offered" | "accepted" | "rejected";
   skills: string[];
   apply_date?: string;
 };

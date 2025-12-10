@@ -7,7 +7,7 @@ import {
   CompaniesReportResponse,
   JobReport,
   JobsReportResponse,
-  FetchPayload
+  FetchPayload,
 } from "schema/schema";
 import Pagination from "./Pagination";
 
@@ -36,11 +36,13 @@ const JobsReport = () => {
           },
         };
 
-        const response = (await fetchWithAuth(payload)) as CompaniesReportResponse;
+        const response = (await fetchWithAuth(
+          payload
+        )) as CompaniesReportResponse;
         setCompanies(response.companies || []);
       } catch (error) {
-        console.error('Failed to fetch companies:', error);
-        setError('Error loading data');
+        console.error("Failed to fetch companies:", error);
+        setError("Error loading data");
         setCompanies([]);
       } finally {
         setCompaniesLoading(false);
@@ -63,7 +65,10 @@ const JobsReport = () => {
 
       try {
         const searchParams = new URLSearchParams();
-        searchParams.append("offset", ((currentPage - 1) * pageSize).toString());
+        searchParams.append(
+          "offset",
+          ((currentPage - 1) * pageSize).toString()
+        );
         searchParams.append("limit", pageSize.toString());
 
         const payload: FetchPayload = {
@@ -77,8 +82,8 @@ const JobsReport = () => {
         setJobs(response.jobs || []);
         setTotalJobs(response.total || 0);
       } catch (error) {
-        console.error('Failed to fetch jobs:', error);
-        setError('Error loading data');
+        console.error("Failed to fetch jobs:", error);
+        setError("Error loading data");
         setJobs([]);
         setTotalJobs(0);
       } finally {
@@ -102,18 +107,20 @@ const JobsReport = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'closed':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'draft':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case "open":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "closed":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "inactive":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const selectedCompanyName = companies.find(c => c.id === selectedCompanyId)?.name;
+  const selectedCompanyName = companies.find(
+    (c) => c.id === selectedCompanyId
+  )?.name;
 
   return (
     <div className="space-y-4">
@@ -139,21 +146,15 @@ const JobsReport = () => {
         </div>
 
         {error ? (
-          <div className="px-6 py-8 text-center text-red-500">
-            {error}
-          </div>
+          <div className="px-6 py-8 text-center text-red-500">{error}</div>
         ) : !selectedCompanyId ? (
           <div className="px-6 py-8 text-center text-gray-500">
             Select a company above
           </div>
         ) : jobsLoading ? (
-          <div className="px-6 py-8 text-center text-gray-500">
-            Loading...
-          </div>
+          <div className="px-6 py-8 text-center text-gray-500">Loading...</div>
         ) : jobs.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-500">
-            No data
-          </div>
+          <div className="px-6 py-8 text-center text-gray-500">No data</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -180,8 +181,13 @@ const JobsReport = () => {
                       {job.title}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${getStatusColor(job.status)}`}>
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${getStatusColor(
+                          job.status
+                        )}`}
+                      >
+                        {job.status.charAt(0).toUpperCase() +
+                          job.status.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -13,7 +13,7 @@ Built with Next.js and AWS.
 ### For Companies
 
 - Create and manage job postings with skills requirements
-- Set job status (draft, open, closed)
+- Set job status (inactive, open, closed)
 - View and rate applicants
 - Extend job offers to candidates
 - Manage offer statuses (offered, accepted, rejected)

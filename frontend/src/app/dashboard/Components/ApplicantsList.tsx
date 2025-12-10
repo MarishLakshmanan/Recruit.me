@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "app/actions/fetch";
-import { ApplicantForJob, ApplicantsForJobResponse, FetchPayload } from "schema/schema";
+import {
+  ApplicantForJob,
+  ApplicantsForJobResponse,
+  FetchPayload,
+} from "schema/schema";
 import Pagination from "./Pagination";
 import RatingSelector from "./RatingSelector";
 import Modal from "universal/Modal";
@@ -21,7 +25,9 @@ const ApplicantsList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ratingLoading, setRatingLoading] = useState<Record<string, boolean>>({});
+  const [ratingLoading, setRatingLoading] = useState<Record<string, boolean>>(
+    {}
+  );
   const pageSize = 10;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -37,7 +43,10 @@ const ApplicantsList = ({
 
       try {
         const searchParams = new URLSearchParams();
-        searchParams.append("offset", ((currentPage - 1) * pageSize).toString());
+        searchParams.append(
+          "offset",
+          ((currentPage - 1) * pageSize).toString()
+        );
         searchParams.append("limit", pageSize.toString());
 
         const payload: FetchPayload = {
@@ -47,12 +56,14 @@ const ApplicantsList = ({
           },
         };
 
-        const response = (await fetchWithAuth(payload)) as ApplicantsForJobResponse;
+        const response = (await fetchWithAuth(
+          payload
+        )) as ApplicantsForJobResponse;
         setApplicants(response.applicants || []);
         setTotalApplicants(response.total || 0);
       } catch (error) {
-        console.error('Failed to fetch applicants:', error);
-        setError('Error loading applicants');
+        console.error("Failed to fetch applicants:", error);
+        setError("Error loading applicants");
         setApplicants([]);
         setTotalApplicants(0);
       } finally {
@@ -65,7 +76,7 @@ const ApplicantsList = ({
 
   const handleRatingChange = async (
     applicantId: string,
-    rating: 'hirable' | 'wait' | 'unacceptable' | 'unrated'
+    rating: "hirable" | "wait" | "unacceptable" | "unrated"
   ) => {
     setRatingLoading({ ...ratingLoading, [applicantId]: true });
 
@@ -90,8 +101,8 @@ const ApplicantsList = ({
         )
       );
     } catch (error) {
-      console.error('Failed to update rating:', error);
-      alert('Failed to update rating. Please try again.');
+      console.error("Failed to update rating:", error);
+      alert("Failed to update rating. Please try again.");
     } finally {
       setRatingLoading({ ...ratingLoading, [applicantId]: false });
     }
@@ -102,7 +113,7 @@ const ApplicantsList = ({
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     // Scroll to top of modal content when page changes
-    const modalContent = document.querySelector('[data-modal-content]');
+    const modalContent = document.querySelector("[data-modal-content]");
     if (modalContent) {
       modalContent.scrollTop = 0;
     }
@@ -113,20 +124,43 @@ const ApplicantsList = ({
     if (totalApplicants === 0) return "No applicants";
     const start = (currentPage - 1) * pageSize + 1;
     const end = Math.min(currentPage * pageSize, totalApplicants);
-    return `Showing ${start}-${end} of ${totalApplicants} applicant${totalApplicants !== 1 ? 's' : ''}`;
+    return `Showing ${start}-${end} of ${totalApplicants} applicant${
+      totalApplicants !== 1 ? "s" : ""
+    }`;
   };
 
   const getOfferStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-      none: { label: 'No Offer', color: 'text-gray-700', bgColor: 'bg-gray-100' },
-      offered: { label: 'Offer Extended', color: 'text-blue-700', bgColor: 'bg-blue-100' },
-      accepted: { label: 'Offer Accepted', color: 'text-green-700', bgColor: 'bg-green-100' },
-      rejected: { label: 'Offer Rejected', color: 'text-red-700', bgColor: 'bg-red-100' },
+    const statusConfig: Record<
+      string,
+      { label: string; color: string; bgColor: string }
+    > = {
+      none: {
+        label: "No Offer",
+        color: "text-gray-700",
+        bgColor: "bg-gray-100",
+      },
+      offered: {
+        label: "Offer Extended",
+        color: "text-blue-700",
+        bgColor: "bg-blue-100",
+      },
+      accepted: {
+        label: "Offer Accepted",
+        color: "text-green-700",
+        bgColor: "bg-green-100",
+      },
+      rejected: {
+        label: "Offer Rejected",
+        color: "text-red-700",
+        bgColor: "bg-red-100",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.none;
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${config.bgColor} ${config.color}`}>
+      <span
+        className={`px-2 py-1 rounded text-xs font-medium ${config.bgColor} ${config.color}`}
+      >
         {config.label}
       </span>
     );
@@ -137,10 +171,14 @@ const ApplicantsList = ({
       <div className="p-6 max-h-[80vh] overflow-y-auto" data-modal-content>
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Applicants for Job</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Applicants for Job
+            </h2>
             <p className="text-gray-600 mt-1">{jobTitle}</p>
             {!isLoading && !error && totalApplicants > 0 && (
-              <p className="text-sm text-gray-500 mt-1">{getPaginationSummary()}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {getPaginationSummary()}
+              </p>
             )}
           </div>
           <button
@@ -199,8 +237,11 @@ const ApplicantsList = ({
                     </label>
                     <RatingSelector
                       currentRating={applicant.rating}
-                      onRatingChange={(rating) => handleRatingChange(applicant.id, rating)}
+                      onRatingChange={(rating) =>
+                        handleRatingChange(applicant.id, rating)
+                      }
                       isLoading={ratingLoading[applicant.id] || false}
+                      disabled={applicant.offer_status !== "none"}
                     />
                   </div>
                 </div>
@@ -224,4 +265,3 @@ const ApplicantsList = ({
 };
 
 export default ApplicantsList;
-

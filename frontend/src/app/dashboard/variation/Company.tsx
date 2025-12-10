@@ -30,7 +30,7 @@ const Company = () => {
 
   const [allSkills, setAllSkills] = useState<string[]>([]);
   const pageSize = 10;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
   const isUpdatingUrlRef = useRef(false);
   const isPageChangeRef = useRef(false);
 
@@ -215,7 +215,7 @@ const Company = () => {
           <div className="mt-8 space-y-4">
             <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg">
               <StatusFilter
-                statuses={["All", "Open", "Closed", "Draft"]}
+                statuses={["All", "Open", "Closed", "Inactive"]}
                 selectedStatus={selectedStatus}
                 onStatusChange={setSelectedStatus}
               />
@@ -238,11 +238,13 @@ const Company = () => {
                   {profile.jobs.map((job) => (
                     <JobCard key={job.id} job={job} editJob={editJob} />
                   ))}
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
+                  {totalPages > 0 && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  )}
                 </>
               )}
             </div>

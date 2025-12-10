@@ -19,9 +19,20 @@ export async function fetchWithAuth(payload: FetchPayload) {
 
   const response = await fetch(payload.url, { ...payload.options, headers });
   if (!response.ok) {
-    const error = await response.json();
-
-    throw new Error(error.error);
+    let errorMessage = `Request failed with status ${response.status}`;
+    try {
+      const error = await response.json();
+      errorMessage = error.error || error.message || errorMessage;
+    } catch {
+      // If response is not JSON, try to get text
+      try {
+        const text = await response.text();
+        errorMessage = text || errorMessage;
+      } catch {
+        // If we can't get text either, use the default message
+      }
+    }
+    throw new Error(errorMessage);
   }
   const data = await response.json();
 

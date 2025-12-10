@@ -1,5 +1,5 @@
-import { fetchWithAuth, getUserRole } from "app/actions/fetch";
-import { useEffect, useState } from "react";
+import { fetchWithAuth } from "app/actions/fetch";
+import { useState } from "react";
 import { FetchPayload, Job, Role } from "schema/schema";
 import Button from "universal/Button";
 import Modal from "universal/Modal";
@@ -11,22 +11,15 @@ import { useRouter } from "next/navigation";
 const JobCard = ({
   job,
   editJob,
+  role,
 }: {
   job: Job & { application_status?: string };
   editJob: (job: Job) => void;
+  role: Role | null;
 }) => {
   const router = useRouter();
-  const [role, setRole] = useState<Role>(Role.COMPANY);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isApplicantsModalOpen, setIsApplicantsModalOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchRole = async () => {
-      const role = (await getUserRole()) as Role;
-      setRole(role);
-    };
-    fetchRole();
-  }, []);
 
   const handleActivate = async () => {
     try {

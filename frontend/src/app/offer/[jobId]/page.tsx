@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchWithAuth, getUserRole } from "app/actions/fetch";
+import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import {
   FetchPayload,
   Role,
@@ -15,13 +16,13 @@ import Pagination from "app/dashboard/Components/Pagination";
 const OfferPage = () => {
   const params = useParams();
   const router = useRouter();
+  const { role: userRole } = useAuthContext();
   const jobId = params.jobId as string;
   const [applicants, setApplicants] = useState<ApplicantForJob[]>([]);
   const [selectedApplicants, setSelectedApplicants] = useState<Set<string>>(
     new Set()
   );
   const [jobTitle, setJobTitle] = useState<string>("");
-  const [userRole, setUserRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,20 +33,10 @@ const OfferPage = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    const fetchRole = async () => {
-      try {
-        const role = (await getUserRole()) as Role;
-        setUserRole(role);
-        if (role !== Role.COMPANY) {
-          router.push("/dashboard");
-        }
-      } catch (err) {
-        console.error("Failed to fetch role:", err);
-        router.push("/login");
-      }
-    };
-    fetchRole();
-  }, [router]);
+    if (userRole && userRole !== Role.COMPANY) {
+      router.push("/dashboard");
+    }
+  }, [userRole, router]);
 
   useEffect(() => {
     if (userRole !== Role.COMPANY) return;

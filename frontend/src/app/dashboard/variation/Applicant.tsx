@@ -8,9 +8,9 @@ import StatusFilter from "app/dashboard/Components/StatusFilter";
 import Pagination from "app/dashboard/Components/Pagination";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ApplicantProfile, FetchPayload } from "schema/schema";
+import { ApplicantProfile, FetchPayload, Role } from "schema/schema";
 
-const Applicant = () => {
+const Applicant = ({ role }: { role: Role | null }) => {
   const router = useRouter();
   const [profile, setProfile] = useState<ApplicantProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchWithAuth, getUserRole } from "app/actions/fetch";
+import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import { FetchPayload, JobDetail, ApplicationStatus, Role, ApplicantForJob, ApplicantsForJobResponse } from "schema/schema";
 import ApplicationStatusComponent from "app/dashboard/Components/ApplicationStatus";
 import JobActions from "app/dashboard/Components/JobActions";
@@ -12,25 +13,12 @@ import Container from "universal/Container";
 const JobDetailPage = () => {
   const params = useParams();
   const router = useRouter();
+  const { role: userRole } = useAuthContext();
   const jobId = params.id as string;
   const [job, setJob] = useState<JobDetail | null>(null);
   const [applicants, setApplicants] = useState<ApplicantForJob[]>([]);
-  const [userRole, setUserRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRole = async () => {
-      try {
-        const role = (await getUserRole()) as Role;
-        setUserRole(role);
-      } catch (err) {
-        console.error("Failed to fetch role:", err);
-        router.push("/login");
-      }
-    };
-    fetchRole();
-  }, [router]);
 
   const fetchJobDetail = async () => {
     if (!userRole) return;

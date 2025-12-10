@@ -1,14 +1,14 @@
 import { fetchWithAuth } from "app/actions/fetch";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CompanyProfile, FetchPayload, Job } from "schema/schema";
+import { CompanyProfile, FetchPayload, Job, Role } from "schema/schema";
 import CompanyHeader from "../Components/CompanyHeader";
 import StatusFilter from "../Components/StatusFilter";
 import SkillsFilter from "../Components/SkillsFilter";
 import Pagination from "../Components/Pagination";
 import JobCard from "../Components/JobCard";
 
-const Company = () => {
+const Company = ({ role }: { role: Role | null }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
@@ -227,7 +227,7 @@ const Company = () => {
               ) : (
                 <>
                   {profile.jobs.map((job) => (
-                    <JobCard key={job.id} job={job} editJob={editJob} />
+                    <JobCard key={job.id} job={job} editJob={editJob} role={role} />
                   ))}
                   {totalPages > 0 && (
                     <Pagination

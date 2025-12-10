@@ -1,35 +1,24 @@
 "use client";
 
 import { fetchWithAuth } from "app/actions/fetch";
-import { useAuthContext } from "app/context/AuthContext";
-import StatusFilter from "app/dashboard/Components/StatusFilter";
 import SearchFilter from "app/dashboard/Components/SearchFilter";
 import SkillsFilter from "app/dashboard/Components/SkillsFilter";
 import Pagination from "app/dashboard/Components/Pagination";
-import JobCard from "app/dashboard/Components/JobCard";
+import ApplicantCard from "app/dashboard/Components/ApplicantCard";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   FetchPayload,
-  Job,
-  SearchJobsResponse,
+  SearchApplicantsResponse,
+  ApplicantReport,
 } from "schema/schema";
 
-type JobWithStatus = Job & {
-  application_status: string;
-  company_name: string;
-};
-
-function JobSearchContent() {
+function ApplicantsSearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { role } = useAuthContext();
-  const [jobs, setJobs] = useState<JobWithStatus[]>([]);
-  const [totalJobs, setTotalJobs] = useState(0);
+  const [applicants, setApplicants] = useState<ApplicantReport[]>([]);
+  const [totalApplicants, setTotalApplicants] = useState(0);
 
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(
-    searchParams.get("status") || "All"
-  );
   const initialSearch = searchParams.get("search") || "";
   const [searchFilter, setSearchFilter] = useState(initialSearch);
   const [selectedSkills, setSelectedSkills] = useState<string[]>(() => {
@@ -43,7 +32,7 @@ function JobSearchContent() {
 
   const [debouncedSearchFilter, setDebouncedSearchFilter] =
     useState(initialSearch);
-  const [jobsLoading, setJobsLoading] = useState(false);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
   const [allSkills, setAllSkills] = useState<string[]>([]);
   const pageSize = 10;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -68,7 +57,6 @@ function JobSearchContent() {
   }, [searchFilter]);
 
   const prevFiltersRef = useRef({
-    status: selectedStatus,
     search: debouncedSearchFilter,
     skills: selectedSkills.join(","),
   });
@@ -80,7 +68,6 @@ function JobSearchContent() {
     }
 
     const filtersChanged =
-      prevFiltersRef.current.status !== selectedStatus ||
       prevFiltersRef.current.search !== debouncedSearchFilter ||
       prevFiltersRef.current.skills !== selectedSkills.join(",");
 
@@ -89,18 +76,14 @@ function JobSearchContent() {
     }
 
     prevFiltersRef.current = {
-      status: selectedStatus,
       search: debouncedSearchFilter,
       skills: selectedSkills.join(","),
     };
-  }, [selectedStatus, debouncedSearchFilter, selectedSkills, currentPage]);
+  }, [debouncedSearchFilter, selectedSkills, currentPage]);
 
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (selectedStatus && selectedStatus !== "All") {
-      params.set("status", selectedStatus);
-    }
     if (debouncedSearchFilter.trim()) {
       params.set("search", debouncedSearchFilter.trim());
     }
@@ -117,12 +100,11 @@ function JobSearchContent() {
     if (newSearch !== currentSearch) {
       isUpdatingUrlRef.current = true;
       const newUrl = newSearch
-        ? `/dashboard/search?${newSearch}`
-        : "/dashboard/search";
+        ? `/dashboard/applicants?${newSearch}`
+        : "/dashboard/applicants";
       router.replace(newUrl, { scroll: false });
     }
   }, [
-    selectedStatus,
     debouncedSearchFilter,
     selectedSkills,
     currentPage,
@@ -136,16 +118,9 @@ function JobSearchContent() {
       return;
     }
 
-    const statusParam = searchParams.get("status");
     const searchParam = searchParams.get("search") || "";
     const skillsParam = searchParams.get("skills");
     const pageParam = searchParams.get("page");
-
-    if (statusParam && statusParam !== selectedStatus) {
-      setSelectedStatus(statusParam);
-    } else if (!statusParam && selectedStatus !== "All") {
-      setSelectedStatus("All");
-    }
 
     if (searchParam !== searchFilter) {
       setSearchFilter(searchParam);
@@ -174,8 +149,8 @@ function JobSearchContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      setJobsLoading(true);
+    const fetchApplicants = async () => {
+      setApplicantsLoading(true);
       try {
         const apiParams = new URLSearchParams();
         if (debouncedSearchFilter.trim()) {
@@ -184,69 +159,50 @@ function JobSearchContent() {
         if (selectedSkills.length > 0) {
           apiParams.append("skills", selectedSkills.join(","));
         }
-        if (selectedStatus && selectedStatus !== "All") {
-          apiParams.append("status", selectedStatus);
-        }
         apiParams.append("offset", ((currentPage - 1) * pageSize).toString());
         apiParams.append("limit", pageSize.toString());
 
         const payload: FetchPayload = {
-          url: `${baseUrl}/applicant/job/search?${apiParams.toString()}`,
+          url: `${baseUrl}/company/applicants/search?${apiParams.toString()}`,
           options: {
             method: "GET",
           },
         };
         const response = (await fetchWithAuth(
           payload
-        )) as SearchJobsResponse & {
-          jobs: JobWithStatus[];
-        };
+        )) as SearchApplicantsResponse;
 
-        setJobs(response.jobs || []);
-        setTotalJobs(response.total || 0);
+        setApplicants(response.applicants || []);
+        setTotalApplicants(response.total || 0);
 
         const skillsSet = new Set<string>();
-        response.jobs.forEach((job) => {
-          job.skills?.forEach((skill) => skillsSet.add(skill));
+        response.applicants.forEach((applicant) => {
+          applicant.skills?.forEach((skill) => skillsSet.add(skill));
         });
         setAllSkills(Array.from(skillsSet).sort());
       } catch (error) {
-        console.error("Failed to fetch jobs:", error);
-        setJobs([]);
-        setTotalJobs(0);
+        console.error("Failed to fetch applicants:", error);
+        setApplicants([]);
+        setTotalApplicants(0);
       } finally {
-        setJobsLoading(false);
+        setApplicantsLoading(false);
       }
     };
 
-    fetchJobs();
-  }, [
-    debouncedSearchFilter,
-    selectedSkills,
-    selectedStatus,
-    currentPage,
-    pageSize,
-    baseUrl,
-  ]);
+    fetchApplicants();
+  }, [debouncedSearchFilter, selectedSkills, currentPage, pageSize, baseUrl]);
 
-  const totalPages = Math.ceil(totalJobs / pageSize);
+  const totalPages = Math.ceil(totalApplicants / pageSize);
 
   const handlePageChange = (page: number) => {
     isPageChangeRef.current = true;
     setCurrentPage(page);
   };
 
-  function editJob(job: Job) {
-    const jobIndex = jobs.findIndex((j) => j.id === job.id);
-    if (jobIndex !== -1) {
-      setJobs(jobs.map((j) => (j.id === job.id ? { ...j, ...job } : j)));
-    }
-  }
-
   return (
     <main className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Search Jobs</h1>
+        <h1 className="text-3xl font-bold">Browse Applicants</h1>
         <button
           onClick={() => router.push("/dashboard")}
           className="rounded-xl bg-gray-500 px-5 py-3 text-white hover:bg-gray-600"
@@ -257,17 +213,12 @@ function JobSearchContent() {
 
       <div className="mt-4 space-y-4">
         <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg">
-          <StatusFilter
-            statuses={["All", "Open", "Applied", "Offered", "Accepted", "Rejected"]}
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SearchFilter
               value={searchFilter}
               onChange={setSearchFilter}
-              label="Search jobs"
-              placeholder="Search by company or job title..."
+              label="Search applicants"
+              placeholder="Search by name or email..."
             />
             <SkillsFilter
               availableSkills={allSkills}
@@ -278,15 +229,19 @@ function JobSearchContent() {
         </div>
 
         <div className="flex-1 shadow-md rounded-lg p-4">
-          {jobsLoading ? (
-            <div className="text-center text-gray-500">Loading jobs...</div>
-          ) : jobs.length === 0 ? (
-            <div className="text-center text-gray-500">No jobs found</div>
+          {applicantsLoading ? (
+            <div className="text-center text-gray-500">
+              Loading applicants...
+            </div>
+          ) : applicants.length === 0 ? (
+            <div className="text-center text-gray-500">No applicants found</div>
           ) : (
             <>
-              {jobs.map((job) => (
-                <JobCard key={job.id} job={job} editJob={editJob} role={role} />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {applicants.map((applicant) => (
+                  <ApplicantCard key={applicant.id} applicant={applicant} />
+                ))}
+              </div>
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -300,7 +255,7 @@ function JobSearchContent() {
   );
 }
 
-export default function JobSearch() {
+export default function ApplicantsSearch() {
   return (
     <Suspense
       fallback={
@@ -309,7 +264,7 @@ export default function JobSearch() {
         </div>
       }
     >
-      <JobSearchContent />
+      <ApplicantsSearchContent />
     </Suspense>
   );
 }

@@ -203,7 +203,15 @@ const Company = ({ role }: { role: Role | null }) => {
             addJob={addJob}
             editJob={editJob}
           />
-          <div className="mt-8 space-y-4">
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => router.push("/dashboard/applicants")}
+              className="rounded-xl bg-indigo-500 px-5 py-3 text-white hover:bg-indigo-600"
+            >
+              View All Applicants
+            </button>
+          </div>
+          <div className="mt-4 space-y-4">
             <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg">
               <StatusFilter
                 statuses={["All", "Open", "Closed", "Inactive"]}

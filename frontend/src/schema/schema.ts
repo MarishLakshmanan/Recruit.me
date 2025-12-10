@@ -99,6 +99,8 @@ export type JobReport = {
 export type ApplicantReport = {
   id: string;
   name: string;
+  email: string;
+  created_at: string;
   application_count: number;
   skills: string[];
 };
@@ -114,6 +116,11 @@ export type JobsReportResponse = {
 };
 
 export type ApplicantsReportResponse = {
+  applicants: ApplicantReport[];
+  total: number;
+};
+
+export type SearchApplicantsResponse = {
   applicants: ApplicantReport[];
   total: number;
 };

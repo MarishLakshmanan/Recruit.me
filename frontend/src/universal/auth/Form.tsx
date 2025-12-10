@@ -13,16 +13,10 @@ const Form = ({ type }: { type: "register" | "login" }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const tabs: Role[] = [Role.COMPANY, Role.APPLICANT];
   const [activeTab, setActiveTab] = useState<Role>(Role.COMPANY);
   const router = useRouter();
-  if (type === "login") {
-    tabs.push(Role.ADMIN);
-  }
 
   const handleSubmit = async () => {
-    // validate the form
-
     if (!email || !password) {
       return;
     }
@@ -41,7 +35,6 @@ const Form = ({ type }: { type: "register" | "login" }) => {
         const formData: LoginData = {
           email,
           password,
-          role: activeTab,
         };
         const response = await loginAction(formData);
         if (response.success) {
@@ -63,7 +56,13 @@ const Form = ({ type }: { type: "register" | "login" }) => {
 
   return (
     <div>
-      <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+      {type === "register" && (
+        <Tabs
+          tabs={[Role.COMPANY, Role.APPLICANT]}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+      )}
 
       <form
         className="w-full mx-auto mt-8 space-y-6"

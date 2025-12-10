@@ -56,13 +56,6 @@ export async function loginAction(data: LoginData) {
 
     const payload: AuthPayload = await response.json();
 
-    // Quick fix: Validate role on frontend before setting cookie
-    if (data.role && payload.role.toLowerCase() !== data.role.toLowerCase()) {
-      throw new Error(
-        `This account is registered as ${payload.role}. Please select the correct account type and try again.`
-      );
-    }
-
     const cookieStore = await cookies();
 
     cookieStore.set("token", JSON.stringify(payload), {

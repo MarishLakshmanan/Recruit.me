@@ -30,7 +30,6 @@ const JobCard = ({
         },
       };
       await fetchWithAuth(payload);
-      alert("Job activated successfully");
       editJob({ ...job, status: "open" });
     } catch (error) {
       alert(error as string);
@@ -46,7 +45,6 @@ const JobCard = ({
         },
       };
       await fetchWithAuth(payload);
-      alert("Job closed successfully");
       editJob({ ...job, status: "inactive" });
     } catch (error) {
       alert(error as string);

@@ -110,7 +110,6 @@ export default function EditJobForm({
 
     try {
       await fetchWithAuth(payload);
-      alert("Job updated successfully");
       closeModal();
 
       const updatedJob: Job = {

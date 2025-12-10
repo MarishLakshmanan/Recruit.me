@@ -29,7 +29,6 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           type: activeTab,
         };
         await registerAction(formData);
-        alert("Registration successful! You can now log in.");
         router.push("/login");
       } else {
         const formData: LoginData = {
@@ -38,7 +37,6 @@ const Form = ({ type }: { type: "register" | "login" }) => {
         };
         const response = await loginAction(formData);
         if (response.success) {
-          alert("Login successful");
           router.push("/dashboard");
         } else {
           alert("Login failed");

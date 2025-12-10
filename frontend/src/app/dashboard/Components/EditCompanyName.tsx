@@ -40,7 +40,6 @@ export default function EditCompanyName({
     };
     try {
       const data = await fetchWithAuth(payload);
-      alert("Company name updated successfully");
       changeName(name);
     } catch (error) {
       alert(error as string);

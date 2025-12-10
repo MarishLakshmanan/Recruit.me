@@ -79,7 +79,6 @@ export default function AddJobForm({
     };
     try {
       const response = await fetchWithAuth(payload);
-      alert("Job created successfully");
       closeModal();
       const job: Job = {
         id: response.id,

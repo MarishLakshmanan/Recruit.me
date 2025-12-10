@@ -60,7 +60,6 @@ export default function EditApplicantSkills({
     };
     try {
       const data = await fetchWithAuth(payload);
-      alert("Successfully updated skills");
       close();
     } catch (error) {
       alert(error as string);

@@ -26,10 +26,11 @@ const JobDetailPage = () => {
         setUserRole(role);
       } catch (err) {
         console.error("Failed to fetch role:", err);
+        router.push("/login");
       }
     };
     fetchRole();
-  }, []);
+  }, [router]);
 
   const fetchJobDetail = async () => {
     if (!userRole) return;

@@ -1,6 +1,7 @@
 "use client";
 import { getUserRole } from "app/actions/fetch";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Role } from "schema/schema";
 import Applicant from "./variation/Applicant";
 import Company from "./variation/Company";
@@ -10,14 +11,21 @@ import Container from "universal/Container";
 const Dashboard = () => {
   const [userRole, setUserRole] = useState<Role | null>(null);
   const [isLoading, setLoading] = useState(true);
+  const router = useRouter();
+
   useEffect(() => {
     const fetchUserRole = async () => {
-      const role = await getUserRole();
-      setUserRole(role);
-      setLoading(false);
+      try {
+        const role = await getUserRole();
+        setUserRole(role);
+        setLoading(false);
+      } catch (error) {
+        console.error("Auth error:", error);
+        router.push("/login");
+      }
     };
     fetchUserRole();
-  }, []);
+  }, [router]);
 
   if (isLoading) {
     return <div>Loading...</div>;

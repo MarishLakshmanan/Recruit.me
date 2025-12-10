@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchWithAuth } from "app/actions/fetch";
+import { fetchWithAuth, getUserRole } from "app/actions/fetch";
 import StatusFilter from "app/dashboard/Components/StatusFilter";
 import SearchFilter from "app/dashboard/Components/SearchFilter";
 import SkillsFilter from "app/dashboard/Components/SkillsFilter";
@@ -48,6 +48,18 @@ function JobSearchContent() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isUpdatingUrlRef = useRef(false);
   const isPageChangeRef = useRef(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await getUserRole();
+      } catch (err) {
+        console.error("Auth error:", err);
+        router.push("/login");
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     if (debounceTimerRef.current) {

@@ -34,6 +34,7 @@ export type ApplicantProfile = {
   email?: string;
   skills: string[];
   applications: Application[];
+  total: number;
 };
 
 export type CompanyProfile = {

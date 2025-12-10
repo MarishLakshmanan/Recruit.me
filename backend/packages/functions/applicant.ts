@@ -7,6 +7,10 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
   const [user, error] = verifyTokenAndRole(event, ["applicant"]);
   if (error) return UNAUTHORIZED;
 
+  const offset = parseInt(event.queryStringParameters?.offset || "0");
+  const limit = parseInt(event.queryStringParameters?.limit || "20");
+  const status = event.queryStringParameters?.status;
+
   const client = await getDbClient();
   try {
     const userResult = await client.query(
@@ -19,12 +23,12 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
       [user!.userId]
     );
 
-    const applicationsResult = await client.query(
-      `SELECT 
+    let applicationsQuery = `
+      SELECT
         j.id as job_id,
         u.name as company_name,
         j.title as job_title,
-        CASE 
+        CASE
           WHEN a.offer_status = 'rejected' THEN 'rejected'
           WHEN a.offer_status = 'offered' THEN 'offered'
           WHEN a.offer_status = 'accepted' THEN 'accepted'
@@ -39,9 +43,49 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
       JOIN users u ON j.company_id = u.id
       LEFT JOIN job_skills js ON j.id = js.job_id
       WHERE a.applicant_id = $1
-      GROUP BY j.id, u.name, j.title, a.offer_status, j.post_date, a.apply_date`,
-      [user!.userId]
-    );
+    `;
+    const params: any[] = [user!.userId];
+    let paramIndex = 2;
+
+    if (status && status !== 'All') {
+      if (status === 'Pending') {
+        applicationsQuery += ` AND (a.offer_status IS NULL OR a.offer_status = 'none')`;
+      } else if (status === 'Offered') {
+        applicationsQuery += ` AND a.offer_status = 'offered'`;
+      } else if (status === 'Accepted') {
+        applicationsQuery += ` AND a.offer_status = 'accepted'`;
+      } else if (status === 'Rejected') {
+        applicationsQuery += ` AND a.offer_status = 'rejected'`;
+      }
+    }
+
+    applicationsQuery += ` GROUP BY j.id, u.name, j.title, a.offer_status, j.post_date, a.apply_date
+                          ORDER BY a.apply_date DESC
+                          LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const applicationsResult = await client.query(applicationsQuery, params);
+
+    let countQuery = `
+      SELECT COUNT(*)
+      FROM applications a
+      WHERE a.applicant_id = $1
+    `;
+    const countParams: any[] = [user!.userId];
+
+    if (status && status !== 'All') {
+      if (status === 'Pending') {
+        countQuery += ` AND (a.offer_status IS NULL OR a.offer_status = 'none')`;
+      } else if (status === 'Offered') {
+        countQuery += ` AND a.offer_status = 'offered'`;
+      } else if (status === 'Accepted') {
+        countQuery += ` AND a.offer_status = 'accepted'`;
+      } else if (status === 'Rejected') {
+        countQuery += ` AND a.offer_status = 'rejected'`;
+      }
+    }
+
+    const countResult = await client.query(countQuery, countParams);
 
     return {
       statusCode: 200,
@@ -49,6 +93,7 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
         ...userResult.rows[0],
         skills: skillsResult.rows.map((r) => r.skill),
         applications: applicationsResult.rows,
+        total: parseInt(countResult.rows[0].count),
       }),
     };
   } finally {
@@ -102,7 +147,6 @@ export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
 
   const client = await getDbClient();
   try {
-    // First get the job details and application status
     const jobResult = await client.query(
       `SELECT 
         j.id,
@@ -154,7 +198,6 @@ export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
             applicationStatus = "Applied";
         }
       } else {
-        // Application exists but no offer_status set (shouldn't happen, but handle it)
         applicationStatus = "Applied";
       }
     }
@@ -180,7 +223,8 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
   const [user, error] = verifyTokenAndRole(event, ["applicant"]);
   if (error) return UNAUTHORIZED;
 
-  const skill = event.queryStringParameters?.skill;
+  const skillsParam = event.queryStringParameters?.skills;
+  const skills = skillsParam?.split(',').map(s => s.trim()).filter(Boolean) || [];
   const search = event.queryStringParameters?.search;
   const status = event.queryStringParameters?.status;
   const offset = parseInt(event.queryStringParameters?.offset || "0");
@@ -215,10 +259,23 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
     const params: any[] = [user!.userId];
     let paramIndex = 2;
 
-    if (skill) {
-      query += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${paramIndex})`;
-      params.push(`%${skill}%`);
-      paramIndex++;
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${paramIndex + index}`;
+      }).join(' OR ');
+
+      query += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM job_skills
+        WHERE job_id = j.id
+        AND (${skillConditions})
+      ) = $${paramIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        params.push(`%${skill}%`);
+      });
+      params.push(skills.length);
+      paramIndex += skills.length + 1;
     }
 
     if (search) {
@@ -258,10 +315,23 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
     const countParams: any[] = [user!.userId];
     let countParamIndex = 2;
 
-    if (skill) {
-      countQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${countParamIndex})`;
-      countParams.push(`%${skill}%`);
-      countParamIndex++;
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${countParamIndex + index}`;
+      }).join(' OR ');
+
+      countQuery += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM job_skills
+        WHERE job_id = j.id
+        AND (${skillConditions})
+      ) = $${countParamIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        countParams.push(`%${skill}%`);
+      });
+      countParams.push(skills.length);
+      countParamIndex += skills.length + 1;
     }
 
     if (search) {

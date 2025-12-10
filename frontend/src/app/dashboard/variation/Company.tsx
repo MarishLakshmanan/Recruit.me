@@ -15,7 +15,6 @@ const Company = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [jobsLoading, setJobsLoading] = useState(false);
 
-  // Initialize state from URL params
   const [selectedStatus, setSelectedStatus] = useState<string | null>(
     searchParams.get("status") || "All"
   );
@@ -34,13 +33,11 @@ const Company = () => {
   const isUpdatingUrlRef = useRef(false);
   const isPageChangeRef = useRef(false);
 
-  // Track previous filter values to detect changes and reset page
   const prevFiltersRef = useRef({
     status: selectedStatus,
     skills: selectedSkills.join(","),
   });
 
-  // Reset page to 1 when filters change (except when page is intentionally changed)
   useEffect(() => {
     if (isPageChangeRef.current) {
       isPageChangeRef.current = false;
@@ -61,7 +58,6 @@ const Company = () => {
     };
   }, [selectedStatus, selectedSkills, currentPage]);
 
-  // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
 
@@ -78,7 +74,6 @@ const Company = () => {
     const newSearch = params.toString();
     const currentSearch = searchParams.toString();
 
-    // Only update if URL actually changed
     if (newSearch !== currentSearch) {
       isUpdatingUrlRef.current = true;
       const newUrl = newSearch
@@ -88,7 +83,6 @@ const Company = () => {
     }
   }, [selectedStatus, selectedSkills, currentPage, router, searchParams]);
 
-  // Sync state from URL when URL changes (browser back/forward)
   useEffect(() => {
     if (isUpdatingUrlRef.current) {
       isUpdatingUrlRef.current = false;
@@ -124,7 +118,6 @@ const Company = () => {
       isPageChangeRef.current = true;
       setCurrentPage(1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -141,8 +134,7 @@ const Company = () => {
           apiParams.append("status", selectedStatus);
         }
         if (selectedSkills.length > 0) {
-          // Backend supports single skill filter, use first selected skill
-          apiParams.append("skills", selectedSkills[0]);
+          apiParams.append("skills", selectedSkills.join(","));
         }
         apiParams.append("offset", ((currentPage - 1) * pageSize).toString());
         apiParams.append("limit", pageSize.toString());
@@ -170,7 +162,6 @@ const Company = () => {
     };
 
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStatus, selectedSkills, currentPage, pageSize, baseUrl]);
 
   const totalPages = profile ? Math.ceil(profile.total / pageSize) : 0;

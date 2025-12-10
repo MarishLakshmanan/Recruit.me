@@ -8,7 +8,8 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
   if (error) return UNAUTHORIZED;
 
   const status = event.queryStringParameters?.status;
-  const skills = event.queryStringParameters?.skills;
+  const skillsParam = event.queryStringParameters?.skills;
+  const skills = skillsParam?.split(',').map(s => s.trim()).filter(Boolean) || [];
   const offset = parseInt(event.queryStringParameters?.offset || "0");
   const limit = parseInt(event.queryStringParameters?.limit || "20");
 
@@ -55,10 +56,23 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
       }
     }
 
-    if (skills) {
-      jobsQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${paramIndex})`;
-      params.push(`%${skills}%`);
-      paramIndex++;
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${paramIndex + index}`;
+      }).join(' OR ');
+
+      jobsQuery += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM job_skills
+        WHERE job_id = j.id
+        AND (${skillConditions})
+      ) = $${paramIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        params.push(`%${skill}%`);
+      });
+      params.push(skills.length);
+      paramIndex += skills.length + 1;
     }
 
     jobsQuery += ` GROUP BY j.id, j.title, j.post_date, j.status, j.description, j.salary
@@ -86,9 +100,22 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
       }
     }
 
-    if (skills) {
-      countQuery += ` AND EXISTS (SELECT 1 FROM job_skills WHERE job_id = j.id AND skill ILIKE $${countParamIndex})`;
-      countParams.push(`%${skills}%`);
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${countParamIndex + index}`;
+      }).join(' OR ');
+
+      countQuery += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM job_skills
+        WHERE job_id = j.id
+        AND (${skillConditions})
+      ) = $${countParamIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        countParams.push(`%${skill}%`);
+      });
+      countParams.push(skills.length);
     }
 
     const countResult = await client.query(countQuery, countParams);
@@ -793,7 +820,8 @@ export const searchApplicants: APIGatewayProxyHandlerV2 = async (event) => {
   if (error) return UNAUTHORIZED;
 
   const search = event.queryStringParameters?.search;
-  const skills = event.queryStringParameters?.skills;
+  const skillsParam = event.queryStringParameters?.skills;
+  const skills = skillsParam?.split(',').map(s => s.trim()).filter(Boolean) || [];
   const offset = parseInt(event.queryStringParameters?.offset || "0");
   const limit = parseInt(event.queryStringParameters?.limit || "20");
 
@@ -821,10 +849,23 @@ export const searchApplicants: APIGatewayProxyHandlerV2 = async (event) => {
       paramIndex++;
     }
 
-    if (skills && skills.trim()) {
-      applicantsQuery += ` AND EXISTS (SELECT 1 FROM applicant_skills WHERE applicant_id = u.id AND skill ILIKE $${paramIndex})`;
-      params.push(`%${skills.trim()}%`);
-      paramIndex++;
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${paramIndex + index}`;
+      }).join(' OR ');
+
+      applicantsQuery += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM applicant_skills
+        WHERE applicant_id = u.id
+        AND (${skillConditions})
+      ) = $${paramIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        params.push(`%${skill}%`);
+      });
+      params.push(skills.length);
+      paramIndex += skills.length + 1;
     }
 
     applicantsQuery += ` GROUP BY u.id, u.name, u.email, u.created_at
@@ -848,9 +889,22 @@ export const searchApplicants: APIGatewayProxyHandlerV2 = async (event) => {
       countParamIndex++;
     }
 
-    if (skills && skills.trim()) {
-      countQuery += ` AND EXISTS (SELECT 1 FROM applicant_skills WHERE applicant_id = u.id AND skill ILIKE $${countParamIndex})`;
-      countParams.push(`%${skills.trim()}%`);
+    if (skills.length > 0) {
+      const skillConditions = skills.map((_, index) => {
+        return `skill ILIKE $${countParamIndex + index}`;
+      }).join(' OR ');
+
+      countQuery += ` AND (
+        SELECT COUNT(DISTINCT skill)
+        FROM applicant_skills
+        WHERE applicant_id = u.id
+        AND (${skillConditions})
+      ) = $${countParamIndex + skills.length}`;
+
+      skills.forEach(skill => {
+        countParams.push(`%${skill}%`);
+      });
+      countParams.push(skills.length);
     }
 
     const countResult = await client.query(countQuery, countParams);

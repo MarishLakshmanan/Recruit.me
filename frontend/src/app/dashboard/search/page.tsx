@@ -258,7 +258,7 @@ function JobSearchContent() {
       <div className="mt-4 space-y-4">
         <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-lg">
           <StatusFilter
-            statuses={["All", "Open", "Applied", "Offer", "Accepted"]}
+            statuses={["All", "Open", "Applied", "Offered", "Accepted", "Rejected"]}
             selectedStatus={selectedStatus}
             onStatusChange={setSelectedStatus}
           />

@@ -68,7 +68,7 @@ const Applicant = ({ role }: { role: Role | null }) => {
     setSelectedStatus(status || "All");
   };
 
-  if (isLoading) {
+  if (isLoading && !profile) {
     return (
       <div className="flex items-center justify-center h-full">
         <h1 className="text-2xl">Loading...</h1>
@@ -120,26 +120,36 @@ const Applicant = ({ role }: { role: Role | null }) => {
           />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <h2 className="text-2xl font-bold mb-4">My Applications</h2>
-          {profile.applications && profile.applications.length > 0 ? (
-            <>
-              {profile.applications.map((app) => (
-                <ApplicationCard key={app.job_id} application={app} />
-              ))}
-              {totalPages > 1 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              )}
-            </>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              {selectedStatus === "All"
-                ? "No applications yet. Click 'Search for Jobs' to start applying!"
-                : `No applications with status: ${selectedStatus}`}
+          <div className={`${isLoading ? "opacity-50 pointer-events-none" : ""}`}>
+            {profile.applications && profile.applications.length > 0 ? (
+              <>
+                {profile.applications.map((app) => (
+                  <ApplicationCard key={app.job_id} application={app} />
+                ))}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                {selectedStatus === "All"
+                  ? "No applications yet. Click 'Search for Jobs' to start applying!"
+                  : `No applications with status: ${selectedStatus}`}
+              </div>
+            )}
+          </div>
+          {isLoading && (
+            <div className="absolute top-16 left-1/2 transform -translate-x-1/2">
+              <div className="bg-white rounded-lg shadow-lg px-4 py-2 flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                <span className="text-sm text-gray-600">Loading...</span>
+              </div>
             </div>
           )}
         </div>

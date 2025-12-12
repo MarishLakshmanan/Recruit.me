@@ -45,7 +45,22 @@ const JobCard = ({
         },
       };
       await fetchWithAuth(payload);
-      editJob({ ...job, status: "inactive" });
+      editJob({ ...job, status: "closed" });
+    } catch (error) {
+      alert(error as string);
+    }
+  };
+
+  const handleReopen = async () => {
+    try {
+      const payload: FetchPayload = {
+        url: `${process.env.NEXT_PUBLIC_API_URL}/company/job/${job.id}/reopen`,
+        options: {
+          method: "POST",
+        },
+      };
+      await fetchWithAuth(payload);
+      editJob({ ...job, status: "open" });
     } catch (error) {
       alert(error as string);
     }
@@ -70,6 +85,16 @@ const JobCard = ({
                 label="Offer"
                 type="secondary"
                 onClick={() => router.push(`/offer/${job.id}`)}
+              />
+            </>
+          )}
+          {job.status === "closed" && (
+            <>
+              <Button label="Reopen" type="primary" onClick={handleReopen} />
+              <Button
+                label="Edit"
+                type="secondary"
+                onClick={() => setIsEditModalOpen(true)}
               />
             </>
           )}

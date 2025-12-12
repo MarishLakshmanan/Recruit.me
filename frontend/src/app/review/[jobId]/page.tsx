@@ -148,7 +148,7 @@ const ReviewPage = () => {
       setApplicants(
         applicants.map((applicant) =>
           applicant.id === applicantId
-            ? { ...applicant, offer_status: "none" }
+            ? { ...applicant, offer_status: "rescinded" }
             : applicant
         )
       );
@@ -196,6 +196,11 @@ const ReviewPage = () => {
         label: "Offer Rejected",
         color: "text-red-700",
         bgColor: "bg-red-100",
+      },
+      rescinded: {
+        label: "Offer Rescinded",
+        color: "text-orange-700",
+        bgColor: "bg-orange-100",
       },
     };
 

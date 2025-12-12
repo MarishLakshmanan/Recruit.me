@@ -186,6 +186,11 @@ const OfferPage = () => {
         color: "text-red-700",
         bgColor: "bg-red-100",
       },
+      rescinded: {
+        label: "Offer Rescinded",
+        color: "text-orange-700",
+        bgColor: "bg-orange-100",
+      },
     };
 
     const config = statusConfig[status] || statusConfig.none;

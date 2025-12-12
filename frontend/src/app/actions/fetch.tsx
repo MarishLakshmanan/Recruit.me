@@ -1,7 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { AuthPayload } from "schema/auth";
-import { FetchPayload } from "schema/schema";
+import { FetchPayload, Role } from "schema/schema";
 
 export async function fetchWithAuth(payload: FetchPayload) {
   console.log("fetchWithAuth", payload);
@@ -39,11 +39,11 @@ export async function fetchWithAuth(payload: FetchPayload) {
   return data;
 }
 
-export async function getUserRole() {
+export async function getUserRole(): Promise<Role | null> {
   const cookieStore = await cookies();
   const storeCokkie = cookieStore.get("token")?.value;
   if (!storeCokkie) {
-    throw new Error("Unauthorized");
+    return null; // Return null instead of throwing - missing token is a valid state
   }
   const crumbs = JSON.parse(storeCokkie) as AuthPayload;
   return crumbs.role;

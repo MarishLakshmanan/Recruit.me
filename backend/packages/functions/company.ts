@@ -720,7 +720,7 @@ export const rescindOffer: APIGatewayProxyHandlerV2 = async (event) => {
     }
 
     const result = await client.query(
-      "UPDATE applications SET offer_status = 'none' WHERE job_id = $1 AND applicant_id = $2",
+      "UPDATE applications SET offer_status = 'rescinded' WHERE job_id = $1 AND applicant_id = $2",
       [jobId, applicantId]
     );
 

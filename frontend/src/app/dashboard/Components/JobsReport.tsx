@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import {
   CompanyReport,
   CompaniesReportResponse,
@@ -12,6 +13,7 @@ import {
 import Pagination from "./Pagination";
 
 const JobsReport = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [companies, setCompanies] = useState<CompanyReport[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [jobs, setJobs] = useState<JobReport[]>([]);
@@ -24,6 +26,11 @@ const JobsReport = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchCompanies = async () => {
       setCompaniesLoading(true);
       setError(null);
@@ -50,9 +57,14 @@ const JobsReport = () => {
     };
 
     fetchCompanies();
-  }, [baseUrl]);
+  }, [baseUrl, isAuthenticated, authLoading]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchJobs = async () => {
       if (!selectedCompanyId) {
         setJobs([]);
@@ -92,7 +104,7 @@ const JobsReport = () => {
     };
 
     fetchJobs();
-  }, [selectedCompanyId, currentPage, pageSize, baseUrl]);
+  }, [selectedCompanyId, currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const handleCompanyChange = (companyId: string) => {
     setSelectedCompanyId(companyId);

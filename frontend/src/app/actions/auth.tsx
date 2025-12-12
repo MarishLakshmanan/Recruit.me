@@ -21,17 +21,24 @@ export async function registerAction(data: RegisterData) {
       const errorData = await response
         .json()
         .catch(() => ({ error: "Failed to parse error response" }));
-      throw new Error(
-        errorData.error || `Registration failed with status ${response.status}`
-      );
+      // Return error instead of throwing to avoid Next.js error overlay
+      return {
+        success: false,
+        error:
+          errorData.error || `Registration failed with status ${response.status}`,
+      };
     }
 
-    return response.json();
+    return { success: true, data: await response.json() };
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unexpected error occurred during registration");
+    // Return error instead of throwing to avoid Next.js error overlay
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred during registration",
+    };
   }
 }
 
@@ -49,9 +56,11 @@ export async function loginAction(data: LoginData) {
       const errorData = await response
         .json()
         .catch(() => ({ error: "Failed to parse error response" }));
-      throw new Error(
-        errorData.error || `Login failed with status ${response.status}`
-      );
+      // Return error instead of throwing to avoid Next.js error overlay
+      return {
+        success: false,
+        error: errorData.error || `Login failed with status ${response.status}`,
+      };
     }
 
     const payload: AuthPayload = await response.json();
@@ -69,9 +78,13 @@ export async function loginAction(data: LoginData) {
 
     return { success: true, role: payload.role };
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unexpected error occurred during login");
+    // Return error instead of throwing to avoid Next.js error overlay
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred during login",
+    };
   }
 }

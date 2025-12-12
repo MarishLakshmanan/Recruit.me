@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import { ApplicantReport, ApplicantsReportResponse, FetchPayload } from "schema/schema";
 import Pagination from "./Pagination";
 
 const ApplicantsReport = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [applicants, setApplicants] = useState<ApplicantReport[]>([]);
   const [totalApplicants, setTotalApplicants] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,6 +17,11 @@ const ApplicantsReport = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchApplicants = async () => {
       setIsLoading(true);
       setError(null);
@@ -45,7 +52,7 @@ const ApplicantsReport = () => {
     };
 
     fetchApplicants();
-  }, [currentPage, pageSize, baseUrl]);
+  }, [currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const totalPages = Math.ceil(totalApplicants / pageSize);
 

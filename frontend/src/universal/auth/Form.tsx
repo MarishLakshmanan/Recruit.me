@@ -28,8 +28,12 @@ const Form = ({ type }: { type: "register" | "login" }) => {
           password,
           type: activeTab,
         };
-        await registerAction(formData);
-        router.push("/login");
+        const response = await registerAction(formData);
+        if (response.success) {
+          router.push("/login");
+        } else {
+          alert(response.error || "Registration failed");
+        }
       } else {
         const formData: LoginData = {
           email,
@@ -37,9 +41,10 @@ const Form = ({ type }: { type: "register" | "login" }) => {
         };
         const response = await loginAction(formData);
         if (response.success) {
+          router.refresh(); // Refresh to sync cookies with server
           router.push("/dashboard");
         } else {
-          alert("Login failed");
+          alert(response.error || "Login failed");
         }
       }
     } catch (error) {

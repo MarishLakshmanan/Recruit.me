@@ -1,6 +1,7 @@
 import { fetchWithAuth } from "app/actions/fetch";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuthContext } from "app/context/AuthContext";
 import { CompanyProfile, FetchPayload, Job, Role } from "schema/schema";
 import CompanyHeader from "../Components/CompanyHeader";
 import StatusFilter from "../Components/StatusFilter";
@@ -9,6 +10,7 @@ import Pagination from "../Components/Pagination";
 import JobCard from "../Components/JobCard";
 
 const Company = ({ role }: { role: Role | null }) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
@@ -121,6 +123,11 @@ const Company = ({ role }: { role: Role | null }) => {
   }, [searchParams]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchProfile = async () => {
       if (isLoading) {
         setIsLoading(true);
@@ -162,7 +169,7 @@ const Company = ({ role }: { role: Role | null }) => {
     };
 
     fetchProfile();
-  }, [selectedStatus, selectedSkills, currentPage, pageSize, baseUrl]);
+  }, [selectedStatus, selectedSkills, currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const totalPages = profile ? Math.ceil(profile.total / pageSize) : 0;
 

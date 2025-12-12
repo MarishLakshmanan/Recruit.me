@@ -44,6 +44,11 @@ export default $config({
       ...cfg,
     });
 
+    api.route("POST /setup/migrate", {
+      handler: "packages/functions/setup.runMigration",
+      ...cfg,
+    });
+
     api.route("POST /login", {
       handler: "packages/functions/auth.login",
       ...cfg,

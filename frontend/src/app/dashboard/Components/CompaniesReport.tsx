@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import { CompanyReport, CompaniesReportResponse, FetchPayload } from "schema/schema";
 import Pagination from "./Pagination";
 
 const CompaniesReport = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [companies, setCompanies] = useState<CompanyReport[]>([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,6 +17,11 @@ const CompaniesReport = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchCompanies = async () => {
       setIsLoading(true);
       setError(null);
@@ -45,7 +52,7 @@ const CompaniesReport = () => {
     };
 
     fetchCompanies();
-  }, [currentPage, pageSize, baseUrl]);
+  }, [currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const totalPages = Math.ceil(totalCompanies / pageSize);
 

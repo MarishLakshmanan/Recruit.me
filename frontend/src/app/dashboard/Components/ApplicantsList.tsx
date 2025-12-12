@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "app/actions/fetch";
+import { useAuthContext } from "app/context/AuthContext";
 import {
   ApplicantForJob,
   ApplicantsForJobResponse,
@@ -20,6 +21,7 @@ const ApplicantsList = ({
   jobTitle: string;
   onClose: () => void;
 }) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [applicants, setApplicants] = useState<ApplicantForJob[]>([]);
   const [totalApplicants, setTotalApplicants] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,6 +39,11 @@ const ApplicantsList = ({
   }, [jobId]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchApplicants = async () => {
       setIsLoading(true);
       setError(null);
@@ -72,7 +79,7 @@ const ApplicantsList = ({
     };
 
     fetchApplicants();
-  }, [jobId, currentPage, pageSize, baseUrl]);
+  }, [jobId, currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const handleRatingChange = async (
     applicantId: string,
@@ -153,6 +160,11 @@ const ApplicantsList = ({
         label: "Offer Rejected",
         color: "text-red-700",
         bgColor: "bg-red-100",
+      },
+      rescinded: {
+        label: "Offer Rescinded",
+        color: "text-orange-700",
+        bgColor: "bg-orange-100",
       },
     };
 

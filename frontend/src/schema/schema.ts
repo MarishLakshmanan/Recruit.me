@@ -129,7 +129,7 @@ export type ApplicantForJob = {
   id: string;
   name: string;
   rating: "hirable" | "wait" | "unacceptable" | "unrated";
-  offer_status: "none" | "offered" | "accepted" | "rejected";
+  offer_status: "none" | "offered" | "accepted" | "rejected" | "rescinded";
   skills: string[];
   apply_date?: string;
 };

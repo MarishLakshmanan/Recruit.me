@@ -23,7 +23,7 @@ type JobWithStatus = Job & {
 function JobSearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { role } = useAuthContext();
+  const { role, isAuthenticated, isLoading: authLoading } = useAuthContext();
   const [jobs, setJobs] = useState<JobWithStatus[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
 
@@ -174,6 +174,11 @@ function JobSearchContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchJobs = async () => {
       setJobsLoading(true);
       try {
@@ -227,6 +232,8 @@ function JobSearchContent() {
     currentPage,
     pageSize,
     baseUrl,
+    isAuthenticated,
+    authLoading,
   ]);
 
   const totalPages = Math.ceil(totalJobs / pageSize);

@@ -8,9 +8,11 @@ import StatusFilter from "app/dashboard/Components/StatusFilter";
 import Pagination from "app/dashboard/Components/Pagination";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthContext } from "app/context/AuthContext";
 import { ApplicantProfile, FetchPayload, Role } from "schema/schema";
 
 const Applicant = ({ role }: { role: Role | null }) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const router = useRouter();
   const [profile, setProfile] = useState<ApplicantProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +31,11 @@ const Applicant = ({ role }: { role: Role | null }) => {
   }, [selectedStatus, currentPage]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
@@ -56,7 +63,7 @@ const Applicant = ({ role }: { role: Role | null }) => {
     };
 
     fetchProfile();
-  }, [currentPage, selectedStatus, baseUrl]);
+  }, [currentPage, selectedStatus, baseUrl, isAuthenticated, authLoading]);
 
   const totalPages = profile ? Math.ceil(profile.total / pageSize) : 0;
 

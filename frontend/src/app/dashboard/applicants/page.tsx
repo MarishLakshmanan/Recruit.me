@@ -7,6 +7,7 @@ import Pagination from "app/dashboard/Components/Pagination";
 import ApplicantCard from "app/dashboard/Components/ApplicantCard";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuthContext } from "app/context/AuthContext";
 import {
   FetchPayload,
   SearchApplicantsResponse,
@@ -14,6 +15,7 @@ import {
 } from "schema/schema";
 
 function ApplicantsSearchContent() {
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [applicants, setApplicants] = useState<ApplicantReport[]>([]);
@@ -149,6 +151,11 @@ function ApplicantsSearchContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    // Wait for auth to be confirmed before making requests
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     const fetchApplicants = async () => {
       setApplicantsLoading(true);
       try {
@@ -190,7 +197,7 @@ function ApplicantsSearchContent() {
     };
 
     fetchApplicants();
-  }, [debouncedSearchFilter, selectedSkills, currentPage, pageSize, baseUrl]);
+  }, [debouncedSearchFilter, selectedSkills, currentPage, pageSize, baseUrl, isAuthenticated, authLoading]);
 
   const totalPages = Math.ceil(totalApplicants / pageSize);
 

@@ -43,7 +43,7 @@ CREATE TABLE applications (
     job_id CHAR(36) NOT NULL,
     applicant_id CHAR(36) NOT NULL,
     rating VARCHAR(20) DEFAULT 'unrated' CHECK (rating IN ('hirable', 'wait', 'unacceptable', 'unrated')),
-    offer_status VARCHAR(20) DEFAULT 'none' CHECK (offer_status IN ('none', 'offered', 'accepted', 'rejected')),
+    offer_status VARCHAR(20) DEFAULT 'none' CHECK (offer_status IN ('none', 'offered', 'accepted', 'rejected', 'rescinded')),
     apply_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
@@ -71,6 +71,58 @@ CREATE TABLE job_skills (
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Schema created successfully" }),
+    };
+  } catch (error: any) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
+  } finally {
+    await client.end();
+  }
+};
+
+export const runMigration: APIGatewayProxyHandlerV2 = async () => {
+  const client = new Client({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || "5432"),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  });
+
+  await client.connect();
+
+  try {
+    // Find and drop the existing constraint (constraint name may vary)
+    const constraintQuery = `
+      SELECT constraint_name 
+      FROM information_schema.table_constraints 
+      WHERE table_name = 'applications' 
+      AND constraint_type = 'CHECK' 
+      AND constraint_name LIKE '%offer_status%';
+    `;
+    
+    const constraintResult = await client.query(constraintQuery);
+    
+    // Drop all found constraints
+    for (const row of constraintResult.rows) {
+      await client.query(`
+        ALTER TABLE applications 
+        DROP CONSTRAINT IF EXISTS ${row.constraint_name};
+      `);
+    }
+
+    // Add the new constraint with 'rescinded'
+    await client.query(`
+      ALTER TABLE applications 
+      ADD CONSTRAINT applications_offer_status_check 
+      CHECK (offer_status IN ('none', 'offered', 'accepted', 'rejected', 'rescinded'));
+    `);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Migration completed successfully: Added 'rescinded' to offer_status" }),
     };
   } catch (error: any) {
     return {

@@ -57,6 +57,8 @@ const JobDetailPage = () => {
           salary: jobData.salary,
           post_date: jobData.post_date,
           status: jobData.status,
+          company_name: jobData.company_name,
+          company_description: jobData.company_description,
           applicant_count: parseInt(jobData.applicant_count) || 0,
           hired_count: parseInt(jobData.hired_count) || 0,
           skills: jobData.skills || [],
@@ -99,6 +101,8 @@ const JobDetailPage = () => {
           salary: jobData.salary,
           post_date: jobData.post_date,
           status: "open",
+          company_name: jobData.company_name,
+          company_description: jobData.company_description,
           applicant_count: 0,
           hired_count: 0,
           skills: jobData.skills || [],
@@ -169,7 +173,20 @@ const JobDetailPage = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-3">{job.title}</h1>
-          
+
+          {job.company_name && (
+            <div className="mb-4 pb-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-700">
+                {job.company_name}
+              </h2>
+              {job.company_description && (
+                <p className="mt-2 text-gray-600 whitespace-pre-wrap">
+                  {job.company_description}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-gray-600">

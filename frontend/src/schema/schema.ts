@@ -41,6 +41,7 @@ export type CompanyProfile = {
   id: string;
   name: string;
   email: string;
+  description?: string;
   jobs: Job[];
   total: number;
 };
@@ -60,6 +61,7 @@ export type Job = {
   status: string;
   skills?: string[];
   company_name?: string;
+  company_description?: string;
 };
 
 export type SearchJobsResponse = {
@@ -77,12 +79,15 @@ export type ApplicationStatus =
 export type JobDetail = Job & {
   description?: string;
   salary?: number;
+  company_name?: string;
+  company_description?: string;
   applicationStatus?: ApplicationStatus;
 };
 
 export type CompanyReport = {
   id: string;
   name: string;
+  description?: string;
   job_count: number;
   application_count: number;
   hired_count: number;

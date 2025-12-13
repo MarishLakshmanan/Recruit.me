@@ -16,7 +16,7 @@ export const getProfile: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
     const userResult = await client.query(
-      "SELECT id, name, email FROM users WHERE id = $1",
+      "SELECT id, name, email, description FROM users WHERE id = $1",
       [user!.userId]
     );
 
@@ -145,14 +145,36 @@ export const updateProfile: APIGatewayProxyHandlerV2 = async (event) => {
   const [user, error] = verifyTokenAndRole(event, ["company"]);
   if (error) return UNAUTHORIZED;
 
-  const { name } = JSON.parse(event.body || "{}");
+  const { name, description } = JSON.parse(event.body || "{}");
+
+  const updates: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (name !== undefined) {
+    updates.push(`name = $${paramIndex}`);
+    params.push(name);
+    paramIndex++;
+  }
+
+  if (description !== undefined) {
+    const descriptionValue =
+      description && description.trim() ? description.trim() : null;
+    updates.push(`description = $${paramIndex}`);
+    params.push(descriptionValue);
+    paramIndex++;
+  }
 
   const client = await getDbClient();
   try {
-    await client.query("UPDATE users SET name = $1 WHERE id = $2", [
-      name,
-      user!.userId,
-    ]);
+    if (updates.length > 0) {
+      params.push(user!.userId);
+      await client.query(
+        `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramIndex}`,
+        params
+      );
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Profile updated" }),
@@ -211,21 +233,24 @@ export const getJob: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
     const result = await client.query(
-      `SELECT 
-        j.id, 
+      `SELECT
+        j.id,
         j.title,
         j.description,
         j.salary,
         j.post_date,
         j.status,
+        u.name as company_name,
+        u.description as company_description,
         COUNT(DISTINCT a.id) as applicant_count,
         COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count,
         ARRAY_AGG(js.skill) FILTER (WHERE js.skill IS NOT NULL) as skills
       FROM jobs j
+      JOIN users u ON j.company_id = u.id
       LEFT JOIN applications a ON j.id = a.job_id
       LEFT JOIN job_skills js ON j.id = js.job_id
       WHERE j.id = $1 AND j.company_id = $2
-      GROUP BY j.id, j.title, j.description, j.salary, j.post_date, j.status`,
+      GROUP BY j.id, j.title, j.description, j.salary, j.post_date, j.status, u.name, u.description`,
       [jobId, user!.userId]
     );
 

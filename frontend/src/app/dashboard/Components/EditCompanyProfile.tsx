@@ -4,12 +4,16 @@ import { fetchWithAuth } from "app/actions/fetch";
 import { useRef, useState } from "react";
 import { FetchPayload } from "schema/schema";
 
-export default function EditCompanyName({
+export default function EditCompanyProfile({
   companyName,
+  companyDescription,
   changeName,
+  changeDescription,
 }: {
   companyName: string;
-  changeName: (string: string) => void;
+  companyDescription: string;
+  changeName: (name: string) => void;
+  changeDescription: (description: string) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
@@ -17,12 +21,15 @@ export default function EditCompanyName({
   const [isPending, setPending] = useState(false);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [name, setName] = useState(companyName);
+  const [description, setDescription] = useState(companyDescription);
 
   const show = () => {
     setName(companyName);
+    setDescription(companyDescription);
     setOpen(true);
     dialogRef.current?.showModal();
   };
+
   const close = () => {
     setOpen(false);
     dialogRef.current?.close();
@@ -35,14 +42,15 @@ export default function EditCompanyName({
       url: `${baseUrl}/company/profile`,
       options: {
         method: "PUT",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, description }),
       },
     };
     try {
-      const data = await fetchWithAuth(payload);
+      await fetchWithAuth(payload);
       changeName(name);
+      changeDescription(description);
     } catch (error) {
-      console.error("Failed to update company name:", error);
+      console.error("Failed to update company profile:", error);
       alert(error as string);
     }
     setPending(false);
@@ -75,16 +83,37 @@ export default function EditCompanyName({
       >
         <form
           action={onSubmit}
-          className="bg-white rounded-xl p-6 shadow-lg w-[420px]"
+          className="bg-white rounded-xl p-6 shadow-lg w-[520px]"
         >
-          <h2 className="mb-4 text-lg font-medium">Company Name</h2>
-          <textarea
-            rows={3}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
-          />
+          <h2 className="mb-4 text-lg font-medium">Edit Company Profile</h2>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Company Name
+            </label>
+            <textarea
+              rows={2}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description (Optional)
+            </label>
+            <textarea
+              rows={6}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Tell applicants about your company..."
+              className="w-full rounded-md border border-gray-300 p-3 outline-none focus:ring-2"
+            />
+          </div>
+
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
           <div className="mt-6 flex justify-end gap-2">
             <button
               type="button"
@@ -98,7 +127,7 @@ export default function EditCompanyName({
               disabled={isPending}
               className="rounded-md bg-gray-900 px-4 py-2 text-white disabled:opacity-70"
             >
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? "Saving..." : "Save"}
             </button>
           </div>
         </form>

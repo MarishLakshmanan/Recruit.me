@@ -93,6 +93,9 @@ const CompaniesReport = () => {
                     Company Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     # Jobs
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -108,6 +111,13 @@ const CompaniesReport = () => {
                   <tr key={company.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {company.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                      <div className="line-clamp-2">
+                        {company.description || (
+                          <span className="text-gray-400 italic">No description</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {company.job_count}

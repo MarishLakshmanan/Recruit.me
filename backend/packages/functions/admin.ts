@@ -12,9 +12,10 @@ export const getCompanies: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
     const result = await client.query(
-      `SELECT 
+      `SELECT
         u.id,
         u.name,
+        u.description,
         COUNT(DISTINCT j.id) as job_count,
         COUNT(DISTINCT a.id) as application_count,
         COUNT(DISTINCT CASE WHEN a.offer_status = 'accepted' THEN a.id END) as hired_count
@@ -22,7 +23,7 @@ export const getCompanies: APIGatewayProxyHandlerV2 = async (event) => {
       LEFT JOIN jobs j ON u.id = j.company_id
       LEFT JOIN applications a ON j.id = a.job_id
       WHERE u.type = 'company'
-      GROUP BY u.id, u.name
+      GROUP BY u.id, u.name, u.description
       LIMIT $1 OFFSET $2`,
       [limit, offset]
     );

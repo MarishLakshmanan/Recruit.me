@@ -47,7 +47,7 @@ export default function ApplicationCard({ application }: Props) {
       </div>
 
       <p className="text-gray-700 mb-2">
-        <span className="font-medium">Company:</span> {application.company_name}
+        {application.company_name}
       </p>
 
       <p className="text-gray-600 text-sm mb-2">

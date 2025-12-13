@@ -171,7 +171,7 @@ export default function EditJobForm({
           onChange={(e) => setDraftSkill(e.target.value)}
           onKeyDown={onSkillsKeyDown}
           onBlur={onSkillsBlur}
-          placeholder="Type a skill and press Enter…"
+          placeholder="Type a skill and press Enter.."
           className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2"
         />
         <div className="flex flex-wrap gap-2">
@@ -243,7 +243,7 @@ export default function EditJobForm({
           disabled={isPending}
           className="rounded-md bg-gray-900 px-4 py-2 text-white disabled:opacity-70"
         >
-          {isPending ? "Saving…" : "Save Changes"}
+          {isPending ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </form>

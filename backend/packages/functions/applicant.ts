@@ -148,15 +148,18 @@ export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
   const client = await getDbClient();
   try {
     const jobResult = await client.query(
-      `SELECT 
+      `SELECT
         j.id,
         j.title,
         j.description,
         j.salary,
         j.post_date,
+        u.name as company_name,
+        u.description as company_description,
         a.id as application_id,
         a.offer_status
       FROM jobs j
+      JOIN users u ON j.company_id = u.id
       LEFT JOIN applications a ON j.id = a.job_id AND a.applicant_id = $2
       WHERE j.id = $1 AND j.status = 'open'`,
       [jobId, user!.userId]
@@ -210,6 +213,8 @@ export const getJobDetail: APIGatewayProxyHandlerV2 = async (event) => {
         description: job.description,
         salary: job.salary,
         post_date: job.post_date,
+        company_name: job.company_name,
+        company_description: job.company_description,
         skills: skills,
         application_status: applicationStatus,
       }),
@@ -237,6 +242,7 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
         j.id,
         j.title,
         u.name as company_name,
+        u.description as company_description,
         j.description,
         j.post_date,
         j.salary,
@@ -298,7 +304,7 @@ export const searchJobs: APIGatewayProxyHandlerV2 = async (event) => {
       }
     }
 
-    query += ` GROUP BY j.id, j.title, u.name, j.description, j.post_date, j.salary, user_app.id, user_app.offer_status
+    query += ` GROUP BY j.id, j.title, u.name, u.description, j.description, j.post_date, j.salary, user_app.id, user_app.offer_status
                ORDER BY j.post_date DESC
                LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);

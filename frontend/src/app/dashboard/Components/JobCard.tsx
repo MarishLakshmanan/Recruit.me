@@ -142,12 +142,21 @@ const JobCard = ({
           href={`/job/${job.id}`}
           className="flex-1 flex justify-between items-center cursor-pointer hover:bg-gray-50 -m-4 p-4"
         >
-          <div>
-            <h3>{job.title}</h3>
+          <div className="flex-1">
+            <h3 className="font-semibold">{job.title}</h3>
             {job.company_name && (
-              <p className="text-gray-600 font-medium">{job.company_name}</p>
+              <div className="mt-1">
+                <p className="text-gray-700 font-medium">{job.company_name}</p>
+                {job.company_description && (
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    {job.company_description}
+                  </p>
+                )}
+              </div>
             )}
-            <p>Posted on: {new Date(job.post_date).toLocaleDateString()}</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Posted on: {new Date(job.post_date).toLocaleDateString()}
+            </p>
             {job.skills?.map((skill) => (
               <span
                 key={skill}

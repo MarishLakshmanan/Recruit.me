@@ -123,7 +123,7 @@ export default function EditApplicantProfile({
               Skills
             </label>
             <input
-              placeholder="Enter your skills and press Enter…"
+              placeholder="Enter your skills and press Enter.."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
@@ -167,7 +167,7 @@ export default function EditApplicantProfile({
               disabled={isPending}
               className="rounded-md bg-gray-900 px-4 py-2 text-white disabled:opacity-70"
             >
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

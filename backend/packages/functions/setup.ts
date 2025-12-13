@@ -22,6 +22,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     salt VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    description TEXT,
     type VARCHAR(20) NOT NULL CHECK (type IN ('applicant', 'company', 'admin')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -94,35 +95,16 @@ export const runMigration: APIGatewayProxyHandlerV2 = async () => {
   await client.connect();
 
   try {
-    // Find and drop the existing constraint (constraint name may vary)
-    const constraintQuery = `
-      SELECT constraint_name 
-      FROM information_schema.table_constraints 
-      WHERE table_name = 'applications' 
-      AND constraint_type = 'CHECK' 
-      AND constraint_name LIKE '%offer_status%';
-    `;
-    
-    const constraintResult = await client.query(constraintQuery);
-    
-    // Drop all found constraints
-    for (const row of constraintResult.rows) {
-      await client.query(`
-        ALTER TABLE applications 
-        DROP CONSTRAINT IF EXISTS ${row.constraint_name};
-      `);
-    }
-
-    // Add the new constraint with 'rescinded'
     await client.query(`
-      ALTER TABLE applications 
-      ADD CONSTRAINT applications_offer_status_check 
-      CHECK (offer_status IN ('none', 'offered', 'accepted', 'rejected', 'rescinded'));
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS description TEXT;
     `);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Migration completed successfully: Added 'rescinded' to offer_status" }),
+      body: JSON.stringify({
+        message: "Migration completed"
+      }),
     };
   } catch (error: any) {
     return {

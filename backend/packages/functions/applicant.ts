@@ -532,3 +532,32 @@ export const rejectOffer: APIGatewayProxyHandlerV2 = async (event) => {
     await client.end();
   }
 };
+
+export const rescindRejection: APIGatewayProxyHandlerV2 = async (event) => {
+  const [user, error] = verifyTokenAndRole(event, ["applicant"]);
+  if (error) return UNAUTHORIZED;
+
+  const jobId = event.pathParameters?.jobId;
+
+  const client = await getDbClient();
+  try {
+    const result = await client.query(
+      "UPDATE applications SET offer_status = 'offered' WHERE job_id = $1 AND applicant_id = $2 AND offer_status = 'rejected'",
+      [jobId, user!.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Rejected offer not found" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Rejection rescinded" }),
+    };
+  } finally {
+    await client.end();
+  }
+};

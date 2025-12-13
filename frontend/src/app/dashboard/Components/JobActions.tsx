@@ -5,6 +5,7 @@ import {
   applyToJob,
   withdrawApplication,
   rescindAcceptance,
+  rescindRejection,
 } from "app/actions/job";
 import { useState } from "react";
 import OfferModal from "./OfferModal";
@@ -97,6 +98,18 @@ const JobActions = ({
           label="Rescind Offer"
           type="danger"
           onClick={() => handleAction(() => rescindAcceptance(jobId))}
+        />
+      </div>
+    );
+  }
+
+  if (status === "Rejected") {
+    return (
+      <div className="flex gap-2 mt-4">
+        <Button
+          label="Undo Rejection"
+          type="warning"
+          onClick={() => handleAction(() => rescindRejection(jobId))}
         />
       </div>
     );

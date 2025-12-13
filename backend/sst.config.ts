@@ -168,6 +168,10 @@ export default $config({
       handler: "packages/functions/applicant.rejectOffer",
       ...cfg,
     });
+    api.route("DELETE /applicant/job/{jobId}/offer/reject", {
+      handler: "packages/functions/applicant.rescindRejection",
+      ...cfg,
+    });
 
     api.route("GET /admin/companies", {
       handler: "packages/functions/admin.getCompanies",

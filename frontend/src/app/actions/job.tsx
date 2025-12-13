@@ -81,3 +81,19 @@ export async function rescindAcceptance(jobId: string) {
     return { success: false, error: error as string };
   }
 }
+
+export async function rescindRejection(jobId: string) {
+  try {
+    const payload: FetchPayload = {
+      url: `${process.env.NEXT_PUBLIC_API_URL}/applicant/job/${jobId}/offer/reject`,
+      options: {
+        method: "DELETE",
+      },
+    };
+    await fetchWithAuth(payload);
+    return { success: true, message: "Rejection rescinded successfully" };
+  } catch (error) {
+    console.error("Failed to rescind rejection:", error);
+    return { success: false, error: error as string };
+  }
+}

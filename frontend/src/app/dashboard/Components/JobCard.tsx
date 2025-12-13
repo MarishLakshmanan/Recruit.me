@@ -84,11 +84,6 @@ const JobCard = ({
                 type="secondary"
                 onClick={() => router.push(`/review/${job.id}`)}
               />
-              <Button
-                label="Offer"
-                type="secondary"
-                onClick={() => router.push(`/offer/${job.id}`)}
-              />
             </>
           )}
           {job.status === "closed" && (

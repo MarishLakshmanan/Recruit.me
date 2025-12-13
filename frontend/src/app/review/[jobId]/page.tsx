@@ -14,7 +14,7 @@ import Button from "universal/Button";
 import Pagination from "app/dashboard/Components/Pagination";
 import RatingSelector from "app/dashboard/Components/RatingSelector";
 
-type OfferStatusFilter = "all" | "offered" | "accepted";
+type OfferStatusFilter = "all" | "none" | "offered" | "accepted" | "rescinded";
 
 const ReviewPage = () => {
   const params = useParams();
@@ -36,6 +36,13 @@ const ReviewPage = () => {
   const [withdrawLoading, setWithdrawLoading] = useState<
     Record<string, boolean>
   >({});
+  const [unrescindLoading, setUnrescindLoading] = useState<
+    Record<string, boolean>
+  >({});
+  const [selectedApplicants, setSelectedApplicants] = useState<Set<string>>(
+    new Set()
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const pageSize = 10;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -63,14 +70,17 @@ const ReviewPage = () => {
         const jobData = await fetchWithAuth(jobPayload);
         setJobTitle(jobData.title || "");
 
-        // Fetch applicants filtered by offer status
         const searchParams = new URLSearchParams();
         searchParams.append(
           "offset",
           ((currentPage - 1) * pageSize).toString()
         );
         searchParams.append("limit", pageSize.toString());
-        searchParams.append("offer_status", offerStatusFilter);
+        const apiFilter =
+          offerStatusFilter === "none" || offerStatusFilter === "rescinded"
+            ? "all"
+            : offerStatusFilter;
+        searchParams.append("offer_status", apiFilter);
 
         const applicantsPayload: FetchPayload = {
           url: `${baseUrl}/company/job/${jobId}/applicants/by-offer-status?${searchParams.toString()}`,
@@ -81,8 +91,24 @@ const ReviewPage = () => {
         const response = (await fetchWithAuth(
           applicantsPayload
         )) as ApplicantsForJobResponse;
-        setApplicants(response.applicants || []);
-        setTotalApplicants(response.total || 0);
+
+        let filteredApplicants = response.applicants || [];
+        if (offerStatusFilter === "none") {
+          filteredApplicants = filteredApplicants.filter(
+            (a) => a.offer_status === "none"
+          );
+        } else if (offerStatusFilter === "rescinded") {
+          filteredApplicants = filteredApplicants.filter(
+            (a) => a.offer_status === "rescinded"
+          );
+        }
+
+        setApplicants(filteredApplicants);
+        setTotalApplicants(
+          offerStatusFilter === "none" || offerStatusFilter === "rescinded"
+            ? filteredApplicants.length
+            : response.total || 0
+        );
       } catch (err) {
         console.error("Failed to fetch data:", err);
         setError("Failed to load applicants. Please try again.");
@@ -144,7 +170,6 @@ const ReviewPage = () => {
 
       await fetchWithAuth(payload);
 
-      // Update local state optimistically
       setApplicants(
         applicants.map((applicant) =>
           applicant.id === applicantId
@@ -163,13 +188,154 @@ const ReviewPage = () => {
     }
   };
 
+  const handleUnrescindOffer = async (applicantId: string) => {
+    setUnrescindLoading({ ...unrescindLoading, [applicantId]: true });
+
+    try {
+      const payload: FetchPayload = {
+        url: `${baseUrl}/company/job/${jobId}/applicant/${applicantId}/offer`,
+        options: {
+          method: "POST",
+        },
+      };
+
+      await fetchWithAuth(payload);
+
+      setApplicants(
+        applicants.map((applicant) =>
+          applicant.id === applicantId
+            ? { ...applicant, offer_status: "offered" }
+            : applicant
+        )
+      );
+      setSuccessMessage("Offer re-extended successfully");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to re-extend offer:", err);
+      setError("Failed to re-extend offer. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setUnrescindLoading({ ...unrescindLoading, [applicantId]: false });
+    }
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    setSelectedApplicants(new Set());
   };
 
   const handleFilterChange = (filter: OfferStatusFilter) => {
     setOfferStatusFilter(filter);
-    setCurrentPage(1); // Reset to first page when filter changes
+    setCurrentPage(1);
+    setSelectedApplicants(new Set());
+  };
+
+  const handleSelectApplicant = (applicantId: string) => {
+    const applicant = applicants.find((a) => a.id === applicantId);
+    if (
+      applicant &&
+      applicant.rating === "hirable" &&
+      applicant.offer_status === "none"
+    ) {
+      setSelectedApplicants((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(applicantId)) {
+          newSet.delete(applicantId);
+        } else {
+          newSet.add(applicantId);
+        }
+        return newSet;
+      });
+    }
+  };
+
+  const handleSelectAll = () => {
+    const selectableApplicants = applicants.filter(
+      (a) => a.rating === "hirable" && a.offer_status === "none"
+    );
+
+    const allSelected = selectableApplicants.every((a) =>
+      selectedApplicants.has(a.id)
+    );
+
+    if (allSelected) {
+      setSelectedApplicants(new Set());
+    } else {
+      setSelectedApplicants(new Set(selectableApplicants.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkOffer = async () => {
+    if (selectedApplicants.size === 0) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const payload: FetchPayload = {
+        url: `${baseUrl}/company/job/${jobId}/applicants/offer`,
+        options: {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            applicantIds: Array.from(selectedApplicants),
+          }),
+        },
+      };
+
+      await fetchWithAuth(payload);
+      setSuccessMessage(
+        `Successfully extended offers to ${selectedApplicants.size} applicant(s)`
+      );
+      setTimeout(() => setSuccessMessage(null), 3000);
+      setSelectedApplicants(new Set());
+
+      const searchParams = new URLSearchParams();
+      searchParams.append("offset", ((currentPage - 1) * pageSize).toString());
+      searchParams.append("limit", pageSize.toString());
+      const apiFilter =
+        offerStatusFilter === "none" || offerStatusFilter === "rescinded"
+          ? "all"
+          : offerStatusFilter;
+      searchParams.append("offer_status", apiFilter);
+
+      const refreshPayload: FetchPayload = {
+        url: `${baseUrl}/company/job/${jobId}/applicants/by-offer-status?${searchParams.toString()}`,
+        options: {
+          method: "GET",
+        },
+      };
+      const refreshResponse = (await fetchWithAuth(
+        refreshPayload
+      )) as ApplicantsForJobResponse;
+
+      let filteredApplicants = refreshResponse.applicants || [];
+      if (offerStatusFilter === "none") {
+        filteredApplicants = filteredApplicants.filter(
+          (a) => a.offer_status === "none"
+        );
+      } else if (offerStatusFilter === "rescinded") {
+        filteredApplicants = filteredApplicants.filter(
+          (a) => a.offer_status === "rescinded"
+        );
+      }
+
+      setApplicants(filteredApplicants);
+      setTotalApplicants(
+        offerStatusFilter === "none" || offerStatusFilter === "rescinded"
+          ? filteredApplicants.length
+          : refreshResponse.total || 0
+      );
+    } catch (err) {
+      console.error("Failed to extend offers:", err);
+      setError("Failed to extend offers. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getOfferStatusBadge = (status: string) => {
@@ -248,7 +414,6 @@ const ReviewPage = () => {
           </div>
         )}
 
-        {/* Filter Tabs */}
         <div className="mb-6 bg-white rounded-lg shadow-md p-4">
           <div className="flex gap-2">
             <button
@@ -260,6 +425,16 @@ const ReviewPage = () => {
               }`}
             >
               All
+            </button>
+            <button
+              onClick={() => handleFilterChange("none")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                offerStatusFilter === "none"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              No Offer
             </button>
             <button
               onClick={() => handleFilterChange("offered")}
@@ -281,6 +456,16 @@ const ReviewPage = () => {
             >
               Hired
             </button>
+            <button
+              onClick={() => handleFilterChange("rescinded")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                offerStatusFilter === "rescinded"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              Rescinded
+            </button>
           </div>
         </div>
 
@@ -296,68 +481,157 @@ const ReviewPage = () => {
           </div>
         ) : (
           <>
+            {selectedApplicants.size > 0 && (
+              <div className="sticky top-0 z-10 bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-blue-900">
+                      {selectedApplicants.size} applicant(s) selected
+                    </span>
+                    <button
+                      onClick={() => setSelectedApplicants(new Set())}
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      onClick={handleSelectAll}
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      {applicants.filter(
+                        (a) => a.rating === "hirable" && a.offer_status === "none"
+                      ).length > 0 &&
+                      applicants
+                        .filter(
+                          (a) => a.rating === "hirable" && a.offer_status === "none"
+                        )
+                        .every((a) => selectedApplicants.has(a.id))
+                        ? "Deselect All"
+                        : "Select All Hirable"}
+                    </button>
+                  </div>
+                  <Button
+                    label={
+                      isSubmitting
+                        ? "Extending Offers..."
+                        : `Extend Offers (${selectedApplicants.size})`
+                    }
+                    type="primary"
+                    onClick={handleBulkOffer}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="space-y-4">
-                {applicants.map((applicant) => (
-                  <div
-                    key={applicant.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {applicant.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          {getOfferStatusBadge(applicant.offer_status)}
-                        </div>
-                        {applicant.skills && applicant.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {applicant.skills.map((skill) => (
-                              <span
-                                key={skill}
-                                className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                {applicants.map((applicant) => {
+                  const isSelected = selectedApplicants.has(applicant.id);
+                  const isSelectable =
+                    applicant.rating === "hirable" &&
+                    applicant.offer_status === "none";
 
-                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Rating:
-                        </label>
-                        <RatingSelector
-                          currentRating={applicant.rating}
-                          onRatingChange={(rating) =>
-                            handleRatingChange(applicant.id, rating)
-                          }
-                          isLoading={ratingLoading[applicant.id] || false}
-                          disabled={applicant.offer_status !== "none"}
+                  return (
+                    <div
+                      key={applicant.id}
+                      className={`border rounded-lg p-4 transition-shadow ${
+                        isSelected
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectApplicant(applicant.id)}
+                          disabled={!isSelectable}
+                          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         />
-                      </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                {applicant.name}
+                              </h3>
+                              <div className="flex items-center gap-2 mb-2">
+                                {getOfferStatusBadge(applicant.offer_status)}
+                              </div>
+                              {applicant.skills && applicant.skills.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {applicant.skills.map((skill) => (
+                                    <span
+                                      key={skill}
+                                      className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
-                      {applicant.offer_status === "offered" && (
-                        <div>
-                          <Button
-                            label={
-                              withdrawLoading[applicant.id]
-                                ? "Withdrawing..."
-                                : "Withdraw Offer"
-                            }
-                            type="danger"
-                            onClick={() => handleWithdrawOffer(applicant.id)}
-                            disabled={withdrawLoading[applicant.id] || false}
-                          />
+                          <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Rating:
+                              </label>
+                              <RatingSelector
+                                currentRating={applicant.rating}
+                                onRatingChange={(rating) =>
+                                  handleRatingChange(applicant.id, rating)
+                                }
+                                isLoading={ratingLoading[applicant.id] || false}
+                                disabled={applicant.offer_status !== "none"}
+                              />
+                            </div>
+
+                            {(applicant.offer_status === "offered" ||
+                              applicant.offer_status === "accepted") && (
+                              <div>
+                                <Button
+                                  label={
+                                    withdrawLoading[applicant.id]
+                                      ? "Withdrawing..."
+                                      : "Withdraw Offer"
+                                  }
+                                  type="danger"
+                                  onClick={() =>
+                                    handleWithdrawOffer(applicant.id)
+                                  }
+                                  disabled={
+                                    withdrawLoading[applicant.id] || false
+                                  }
+                                />
+                              </div>
+                            )}
+
+                            {applicant.offer_status === "rescinded" && (
+                              <div>
+                                <Button
+                                  label={
+                                    unrescindLoading[applicant.id]
+                                      ? "Re-extending..."
+                                      : "Re-extend Offer"
+                                  }
+                                  type="primary"
+                                  onClick={() =>
+                                    handleUnrescindOffer(applicant.id)
+                                  }
+                                  disabled={
+                                    unrescindLoading[applicant.id] || false
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

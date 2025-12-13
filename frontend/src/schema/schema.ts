@@ -54,6 +54,7 @@ export type CreateJob = {
 };
 export type Job = {
   title: string;
+  description?: string;
   applicant_count: number;
   hired_count: number;
   id: string;

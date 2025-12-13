@@ -2,7 +2,7 @@
 
 import { fetchWithAuth } from "app/actions/fetch";
 import ApplicantHeader from "app/dashboard/Components/ApplicantHeader";
-import EditApplicantSkills from "app/dashboard/Components/EditApplicantSkills";
+import EditApplicantProfile from "app/dashboard/Components/EditApplicantProfile";
 import ApplicationCard from "app/dashboard/Components/ApplicationCard";
 import StatusFilter from "app/dashboard/Components/StatusFilter";
 import Pagination from "app/dashboard/Components/Pagination";
@@ -75,6 +75,16 @@ const Applicant = ({ role }: { role: Role | null }) => {
     setSelectedStatus(status || "All");
   };
 
+  const handleProfileUpdate = (updates: { name?: string; skills?: string[] }) => {
+    if (profile) {
+      setProfile({
+        ...profile,
+        ...(updates.name && { name: updates.name }),
+        ...(updates.skills && { skills: updates.skills }),
+      });
+    }
+  };
+
   if (isLoading && !profile) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -89,7 +99,10 @@ const Applicant = ({ role }: { role: Role | null }) => {
         <div className="flex flex-row gap-4 items-center justify-between mb-6">
           <ApplicantHeader applicant={profile} />
           <div className="flex gap-3">
-            <EditApplicantSkills applicant={profile} />
+            <EditApplicantProfile
+              applicant={profile}
+              onProfileUpdate={handleProfileUpdate}
+            />
             <button
               onClick={() => router.push("/dashboard/search")}
               className="rounded-xl bg-indigo-500 px-5 py-3 text-white hover:bg-indigo-600"

@@ -4,21 +4,26 @@ import { fetchWithAuth } from "app/actions/fetch";
 import { useRef, useState } from "react";
 import { ApplicantProfile, FetchPayload } from "schema/schema";
 
-export default function EditApplicantSkills({
+export default function EditApplicantProfile({
   applicant,
+  onProfileUpdate,
 }: {
   applicant: ApplicantProfile;
+  onProfileUpdate?: (updates: { name?: string; skills?: string[] }) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [error, setError] = useState<string | null>(null);
 
+  const [name, setName] = useState<string>(applicant.name);
   const [skills, setSkills] = useState<string[]>(applicant.skills);
   const [input, setInput] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   const show = () => {
+    setName(applicant.name);
+    setSkills(applicant.skills);
     setInput("");
     setOpen(true);
     dialogRef.current?.showModal();
@@ -51,19 +56,25 @@ export default function EditApplicantSkills({
   };
 
   const onSubmit = async () => {
+    setIsPending(true);
     const payload: FetchPayload = {
       url: `${baseUrl}/applicant/profile`,
       options: {
         method: "PUT",
-        body: JSON.stringify({ skills }),
+        body: JSON.stringify({ name, skills }),
       },
     };
     try {
-      const data = await fetchWithAuth(payload);
+      await fetchWithAuth(payload);
+      if (onProfileUpdate) {
+        onProfileUpdate({ name, skills });
+      }
       close();
     } catch (error) {
-      console.error("Failed to update applicant skills:", error);
+      console.error("Failed to update applicant profile:", error);
       alert(error as string);
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -92,34 +103,52 @@ export default function EditApplicantSkills({
         }}
       >
         <div className="bg-white rounded-xl p-6 shadow-lg w-[700px] max-h-[90vh] overflow-y-auto">
-          <h2 className="mb-4 text-lg font-semibold">Skills Required</h2>
+          <h2 className="mb-4 text-lg font-semibold">Edit Profile</h2>
 
-          <input
-            placeholder="Enter your skills and press Enter…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onKeyDown}
-            className="mb-3 w-full rounded-md border border-blue-300 bg-blue-50/40 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
-          />
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+              placeholder="Your name"
+            />
+          </div>
 
-          <div className="flex flex-wrap gap-3 mb-6">
-            {skills.map((s) => (
-              <span
-                key={s}
-                className="group inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm text-blue-800 shadow-sm"
-              >
-                <span className="font-medium">{s}</span>
-                <button
-                  type="button"
-                  onClick={() => removeSkill(s)}
-                  aria-label={`Remove ${s}`}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-700 transition
-                   hover:bg-blue-200 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Skills
+            </label>
+            <input
+              placeholder="Enter your skills and press Enter…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              className="mb-3 w-full rounded-md border border-blue-300 bg-blue-50/40 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-300"
+            />
+
+            <div className="flex flex-wrap gap-3">
+              {skills.map((s) => (
+                <span
+                  key={s}
+                  className="group inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm text-blue-800 shadow-sm"
                 >
-                  ×
-                </button>
-              </span>
-            ))}
+                  <span className="font-medium">{s}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(s)}
+                    aria-label={`Remove ${s}`}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-blue-700 transition
+                     hover:bg-blue-200 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
 
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

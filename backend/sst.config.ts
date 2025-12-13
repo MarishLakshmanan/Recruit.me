@@ -189,7 +189,7 @@ export default $config({
     const frontend = new sst.aws.Nextjs("RecruitFrontend", {
       path: "../frontend",
       environment: {
-        NEXT_PUBLIC_API_URL: api.url,
+        NEXT_PUBLIC_API_URL: $interpolate`${api.url}`.apply(url => url.replace(/\/$/, "")),
       },
       link: [api],
     });

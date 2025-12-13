@@ -32,6 +32,7 @@ const JobCard = ({
       await fetchWithAuth(payload);
       editJob({ ...job, status: "open" });
     } catch (error) {
+      console.error("Failed to activate job:", error);
       alert(error as string);
     }
   };
@@ -47,6 +48,7 @@ const JobCard = ({
       await fetchWithAuth(payload);
       editJob({ ...job, status: "closed" });
     } catch (error) {
+      console.error("Failed to close job:", error);
       alert(error as string);
     }
   };
@@ -62,6 +64,7 @@ const JobCard = ({
       await fetchWithAuth(payload);
       editJob({ ...job, status: "open" });
     } catch (error) {
+      console.error("Failed to reopen job:", error);
       alert(error as string);
     }
   };

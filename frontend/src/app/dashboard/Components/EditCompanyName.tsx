@@ -42,6 +42,7 @@ export default function EditCompanyName({
       const data = await fetchWithAuth(payload);
       changeName(name);
     } catch (error) {
+      console.error("Failed to update company name:", error);
       alert(error as string);
     }
     setPending(false);

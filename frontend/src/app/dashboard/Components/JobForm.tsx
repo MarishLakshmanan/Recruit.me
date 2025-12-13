@@ -90,6 +90,7 @@ export default function AddJobForm({
       };
       addJob(job);
     } catch (error) {
+      console.error("Failed to create job:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       setError(errorMessage);

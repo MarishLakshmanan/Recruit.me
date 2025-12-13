@@ -106,6 +106,7 @@ const JobDetailPage = () => {
         });
       }
     } catch (err) {
+      console.error("Failed to fetch job details:", err);
       setError(err as string);
     } finally {
       setIsLoading(false);

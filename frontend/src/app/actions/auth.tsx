@@ -31,7 +31,7 @@ export async function registerAction(data: RegisterData) {
 
     return { success: true, data: await response.json() };
   } catch (error) {
-    // Return error instead of throwing to avoid Next.js error overlay
+    console.error("Registration failed:", error);
     return {
       success: false,
       error:
@@ -78,7 +78,7 @@ export async function loginAction(data: LoginData) {
 
     return { success: true, role: payload.role };
   } catch (error) {
-    // Return error instead of throwing to avoid Next.js error overlay
+    console.error("Login failed:", error);
     return {
       success: false,
       error:

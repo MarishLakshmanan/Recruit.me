@@ -48,6 +48,7 @@ export default function EditJobForm({
         setSkills(jobData.skills || []);
         setIsLoading(false);
       } catch (error) {
+        console.error("Failed to fetch job details for editing:", error);
         setError(error as string);
         setIsLoading(false);
         alert(error as string);
@@ -122,6 +123,7 @@ export default function EditJobForm({
       };
       editJob(updatedJob);
     } catch (error) {
+      console.error("Failed to update job:", error);
       setError(error as string);
       alert(error as string);
     }

@@ -62,6 +62,7 @@ export default function EditApplicantSkills({
       const data = await fetchWithAuth(payload);
       close();
     } catch (error) {
+      console.error("Failed to update applicant skills:", error);
       alert(error as string);
     }
   };

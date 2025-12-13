@@ -13,6 +13,7 @@ export async function applyToJob(jobId: string) {
     await fetchWithAuth(payload);
     return { success: true, message: "Application submitted successfully" };
   } catch (error) {
+    console.error("Failed to apply to job:", error);
     return { success: false, error: error as string };
   }
 }
@@ -28,6 +29,7 @@ export async function withdrawApplication(jobId: string) {
     await fetchWithAuth(payload);
     return { success: true, message: "Application withdrawn successfully" };
   } catch (error) {
+    console.error("Failed to withdraw application:", error);
     return { success: false, error: error as string };
   }
 }
@@ -43,6 +45,7 @@ export async function acceptOffer(jobId: string) {
     await fetchWithAuth(payload);
     return { success: true, message: "Offer accepted successfully" };
   } catch (error) {
+    console.error("Failed to accept offer:", error);
     return { success: false, error: error as string };
   }
 }
@@ -58,6 +61,7 @@ export async function rejectOffer(jobId: string) {
     await fetchWithAuth(payload);
     return { success: true, message: "Offer rejected successfully" };
   } catch (error) {
+    console.error("Failed to reject offer:", error);
     return { success: false, error: error as string };
   }
 }
@@ -73,6 +77,7 @@ export async function rescindAcceptance(jobId: string) {
     await fetchWithAuth(payload);
     return { success: true, message: "Acceptance rescinded successfully" };
   } catch (error) {
+    console.error("Failed to rescind acceptance:", error);
     return { success: false, error: error as string };
   }
 }

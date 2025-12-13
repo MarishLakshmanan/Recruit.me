@@ -49,6 +49,11 @@ export default $config({
       ...cfg,
     });
 
+    api.route("DELETE /setup/jobs", {
+      handler: "packages/functions/setup.deleteAllJobs",
+      ...cfg,
+    });
+
     api.route("POST /login", {
       handler: "packages/functions/auth.login",
       ...cfg,

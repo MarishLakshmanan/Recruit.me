@@ -145,14 +145,12 @@ const JobCard = ({
           <div className="flex-1">
             <h3 className="font-semibold">{job.title}</h3>
             {job.company_name && (
-              <div className="mt-1">
-                <p className="text-gray-700 font-medium">{job.company_name}</p>
-                {job.company_description && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {job.company_description}
-                  </p>
-                )}
-              </div>
+              <p className="text-gray-700 font-medium mt-1">{job.company_name}</p>
+            )}
+            {job.description && (
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {job.description}
+              </p>
             )}
             <p className="text-sm text-gray-500 mt-1">
               Posted on: {new Date(job.post_date).toLocaleDateString()}

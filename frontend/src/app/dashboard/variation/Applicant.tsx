@@ -31,8 +31,12 @@ const Applicant = ({ role }: { role: Role | null }) => {
   }, [selectedStatus, currentPage]);
 
   useEffect(() => {
-    // Wait for auth to be confirmed before making requests
-    if (authLoading || !isAuthenticated) {
+    if (!isAuthenticated && !authLoading) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (authLoading) {
       return;
     }
 

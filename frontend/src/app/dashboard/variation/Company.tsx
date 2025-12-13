@@ -123,8 +123,13 @@ const Company = ({ role }: { role: Role | null }) => {
   }, [searchParams]);
 
   useEffect(() => {
-    // Wait for auth to be confirmed before making requests
-    if (authLoading || !isAuthenticated) {
+    if (!isAuthenticated && !authLoading) {
+      setIsLoading(false);
+      setJobsLoading(false);
+      return;
+    }
+
+    if (authLoading) {
       return;
     }
 

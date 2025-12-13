@@ -22,11 +22,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = async () => {
       try {
         const userRole = await getUserRole();
-        setRole(userRole);
+
+        if (userRole === null) {
+          setRole(null);
+          if (pathname !== "/login" && pathname !== "/sign-up") {
+            router.push("/login");
+          }
+        } else {
+          setRole(userRole);
+        }
       } catch (error) {
         console.error("Auth error:", error);
         setRole(null);
-        // Only redirect if not already on login/sign-up
         if (pathname !== "/login" && pathname !== "/sign-up") {
           router.push("/login");
         }
@@ -35,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
     checkAuth();
-  }, [router, pathname]); // Re-check when pathname changes
+  }, [router, pathname]);
 
   return (
     <AuthContext.Provider

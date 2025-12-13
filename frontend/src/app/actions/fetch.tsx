@@ -12,7 +12,7 @@ export async function fetchWithAuth(payload: FetchPayload, maxRetries = 3) {
       const cookieStore = await cookies();
       const storeCookie = cookieStore.get("token")?.value;
       if (!storeCookie) {
-        throw new Error("Unauthorized");
+        throw new Error("Unauthorized: No authentication token");
       }
       const crumbs = JSON.parse(storeCookie) as AuthPayload;
       const headers = new Headers(payload.options.headers || {});
@@ -33,10 +33,14 @@ export async function fetchWithAuth(payload: FetchPayload, maxRetries = 3) {
           } catch { }
         }
 
+        if (response.status === 401) {
+          throw new Error(`Unauthorized: ${errorMessage}`);
+        }
+
         if ((response.status === 404 || response.status === 500) && attempt < maxRetries) {
           lastError = new Error(errorMessage);
           const delay = Math.min(100 * Math.pow(2, attempt - 1) + Math.random() * 100, 1000);
-          console.log(`Retry attempt ${attempt}/${maxRetries}`);
+          console.log(`Retry attempt ${attempt}/${maxRetries} for status ${response.status}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -48,7 +52,11 @@ export async function fetchWithAuth(payload: FetchPayload, maxRetries = 3) {
       return data;
     } catch (error) {
       lastError = error;
-      if (attempt < maxRetries && (error instanceof Error && error.message.includes("Unauthorized")) === false) {
+
+      const isUnauthorized = error instanceof Error &&
+        (error.message.includes("Unauthorized") || error.message.includes("401"));
+
+      if (attempt < maxRetries && !isUnauthorized) {
         const delay = Math.min(100 * Math.pow(2, attempt - 1) + Math.random() * 100, 1000);
         console.log(`Retry attempt ${attempt}/${maxRetries}`);
         await new Promise(resolve => setTimeout(resolve, delay));
